@@ -1,0 +1,13 @@
+services:
+  qaztil:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      WEB_DIR: /app/frontend
+      DB_PATH: /app/data/qaztil.db
+    volumes:
+      - qaztil-data:/app/data
+
+volumes:
+  qaztil-data:

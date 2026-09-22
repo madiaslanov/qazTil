@@ -1,4 +1,4 @@
-.PHONY: run test build swagger fmt
+.PHONY: run test build swagger fmt docker
 
 APP := backend/bin/qaztil
 SWAG := github.com/swaggo/swag/cmd/swag@v1.16.4
@@ -18,3 +18,6 @@ fmt:
 
 swagger:
 	cd backend && go run $(SWAG) init -g main.go -d cmd/api,internal -o internal/adapter/http/docs --parseInternal --parseDependency --exclude internal/adapter/http/docs
+
+docker:
+	docker compose up --build

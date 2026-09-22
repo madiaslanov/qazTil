@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -66,8 +67,8 @@ func main() {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("qazTil listening on http://localhost%s", cfg.addr)
-		log.Printf("swagger http://localhost%s/swagger/index.html", cfg.addr)
+		log.Printf("qazTil listening on %s", cfg.addr)
+		log.Printf("swagger %s/swagger/index.html", cfg.addr)
 		errCh <- srv.ListenAndServe()
 	}()
 
@@ -96,10 +97,23 @@ type config struct {
 
 func loadConfig() config {
 	return config{
-		addr:   env("ADDR", ":8080"),
+		addr:   listenAddr(),
 		dbPath: env("DB_PATH", "data/qaztil.db"),
 		webDir: env("WEB_DIR", "../frontend"),
 	}
+}
+
+func listenAddr() string {
+	if addr := os.Getenv("ADDR"); addr != "" {
+		return addr
+	}
+	if port := os.Getenv("PORT"); port != "" {
+		if strings.HasPrefix(port, ":") {
+			return port
+		}
+		return ":" + port
+	}
+	return ":8080"
 }
 
 func env(key, fallback string) string {

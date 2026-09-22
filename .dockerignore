@@ -1,0 +1,6 @@
+.git
+.tools
+bin
+backend/bin
+data
+**/*.db
