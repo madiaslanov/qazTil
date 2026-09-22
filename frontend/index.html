@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>qazTil — казахский язык</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<!--
+  Макет для фронтенд-разработчика. Данные на странице статичные.
+  Контракт API, базовый путь /api/v1:
+  GET/POST        /categories
+  GET/PUT/DELETE  /categories/{id}
+  GET/POST        /words?category_id=
+  GET/PUT/DELETE  /words/{id}
+  POST            /quizzes                 { category_id, size }
+  GET             /quizzes/{id}
+  POST            /quizzes/{id}/answers    { question_id, selected_index }
+  GET             /progress
+  Swagger UI: /swagger/index.html
+-->
+<body>
+  <header class="site-header">
+    <p class="brand-mark">qazTil</p>
+    <h1>Қазақ тілі</h1>
+    <p class="lede">Базовая страница для изучения казахского. Интерфейс подключит другой разработчик.</p>
+  </header>
+
+  <nav class="site-nav">
+    <a href="#categories">Категории</a>
+    <a href="#words">Словарь</a>
+    <a href="#quiz">Квиз</a>
+    <a href="#progress">Прогресс</a>
+    <a href="/swagger/index.html">Swagger</a>
+  </nav>
+
+  <main>
+    <section id="categories" class="card">
+      <h2>Категории</h2>
+      <ul class="plain">
+        <li>Сәлемдесу — Приветствия</li>
+        <li>Отбасы — Семья</li>
+        <li>Тамақ — Еда</li>
+      </ul>
+    </section>
+
+    <section id="words" class="card">
+      <h2>Словарь</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Қазақша</th>
+            <th>Транскрипция</th>
+            <th>Русский</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Сәлем</td>
+            <td>sälem</td>
+            <td>Привет</td>
+          </tr>
+          <tr>
+            <td>Рақмет</td>
+            <td>raqmet</td>
+            <td>Спасибо</td>
+          </tr>
+          <tr>
+            <td>Ана</td>
+            <td>ana</td>
+            <td>Мама</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="quiz" class="card">
+      <h2>Квиз</h2>
+      <p class="prompt">Привет</p>
+      <ol class="options">
+        <li>Сәлем</li>
+        <li>Рақмет</li>
+        <li>Сау болыңыз</li>
+        <li>Кешіріңіз</li>
+      </ol>
+    </section>
+
+    <section id="progress" class="card">
+      <h2>Прогресс</h2>
+      <p>Приветствия: 0 из 0</p>
+      <p>Семья: 0 из 0</p>
+      <p>Еда: 0 из 0</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,553 @@
+basePath: /api/v1
+definitions:
+  AnswerRequest:
+    properties:
+      question_id:
+        example: 1
+        type: integer
+      selected_index:
+        example: 0
+        type: integer
+    type: object
+  AnswerResponse:
+    properties:
+      correct:
+        example: true
+        type: boolean
+      correct_index:
+        example: 2
+        type: integer
+      quiz:
+        $ref: '#/definitions/QuizResponse'
+    type: object
+  CategoryRequest:
+    properties:
+      description:
+        example: Короткие фразы
+        type: string
+      name_kk:
+        example: Сәлемдесу
+        type: string
+      name_ru:
+        example: Приветствия
+        type: string
+    type: object
+  CategoryResponse:
+    properties:
+      description:
+        example: Короткие фразы
+        type: string
+      id:
+        example: 1
+        type: integer
+      name_kk:
+        example: Сәлемдесу
+        type: string
+      name_ru:
+        example: Приветствия
+        type: string
+    type: object
+  ErrorResponse:
+    properties:
+      error:
+        example: не найдено
+        type: string
+    type: object
+  ProgressResponse:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      category_name_kk:
+        example: Сәлемдесу
+        type: string
+      category_name_ru:
+        example: Приветствия
+        type: string
+      correct_answers:
+        example: 3
+        type: integer
+      last_studied_at:
+        type: string
+      total_answers:
+        example: 4
+        type: integer
+    type: object
+  QuestionResponse:
+    properties:
+      correct:
+        type: boolean
+      correct_index:
+        type: integer
+      id:
+        example: 1
+        type: integer
+      options:
+        items:
+          type: string
+        type: array
+      prompt:
+        example: Привет
+        type: string
+      selected_index:
+        type: integer
+    type: object
+  QuizResponse:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      created_at:
+        type: string
+      finished_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      questions:
+        items:
+          $ref: '#/definitions/QuestionResponse'
+        type: array
+      score:
+        $ref: '#/definitions/ScoreResponse'
+    type: object
+  ScoreResponse:
+    properties:
+      correct:
+        example: 1
+        type: integer
+      total:
+        example: 5
+        type: integer
+    type: object
+  StartQuizRequest:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      size:
+        example: 5
+        type: integer
+    type: object
+  WordRequest:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      example_kk:
+        example: Сәлем!
+        type: string
+      example_ru:
+        example: Привет!
+        type: string
+      kazakh:
+        example: Сәлем
+        type: string
+      russian:
+        example: Привет
+        type: string
+      transcription:
+        example: sälem
+        type: string
+    type: object
+  WordResponse:
+    properties:
+      category_id:
+        example: 1
+        type: integer
+      example_kk:
+        example: Сәлем!
+        type: string
+      example_ru:
+        example: Привет!
+        type: string
+      id:
+        example: 1
+        type: integer
+      kazakh:
+        example: Сәлем
+        type: string
+      russian:
+        example: Привет
+        type: string
+      transcription:
+        example: sälem
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: 'API для изучения казахского языка: категории, словарь, квиз и прогресс.'
+  title: qazTil API
+  version: "1.0"
+paths:
+  /categories:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/CategoryResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Список категорий
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Категория
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Создать категорию
+      tags:
+      - categories
+  /categories/{id}:
+    delete:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Удалить категорию
+      tags:
+      - categories
+    get:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Категория по id
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Категория
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Обновить категорию
+      tags:
+      - categories
+  /progress:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ProgressResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Прогресс по категориям
+      tags:
+      - progress
+  /quizzes:
+    post:
+      consumes:
+      - application/json
+      description: Русское слово и четыре казахских варианта. Верный ответ скрыт,
+        пока ученик не ответит.
+      parameters:
+      - description: Параметры
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/StartQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/QuizResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Начать квиз
+      tags:
+      - quizzes
+  /quizzes/{id}:
+    get:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/QuizResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Состояние квиза и счёт
+      tags:
+      - quizzes
+  /quizzes/{id}/answers:
+    post:
+      consumes:
+      - application/json
+      description: Записывает выбор и обновляет прогресс категории.
+      parameters:
+      - description: ID квиза
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Ответ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AnswerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AnswerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Ответить на вопрос
+      tags:
+      - quizzes
+  /words:
+    get:
+      parameters:
+      - description: Фильтр по категории
+        in: query
+        name: category_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/WordResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Список слов
+      tags:
+      - words
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Слово
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/WordRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/WordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Создать слово
+      tags:
+      - words
+  /words/{id}:
+    delete:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Удалить слово
+      tags:
+      - words
+    get:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/WordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Слово по id
+      tags:
+      - words
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Слово
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/WordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/WordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Обновить слово
+      tags:
+      - words
+schemes:
+- http
+swagger: "2.0"

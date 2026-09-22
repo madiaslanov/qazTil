@@ -1,0 +1,5 @@
+bin/
+data/
+.tools/
+*.db
+.DS_Store
