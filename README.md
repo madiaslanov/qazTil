@@ -14,7 +14,13 @@
 make run
 ```
 
-Сервер слушает `http://localhost:8080`. Swagger UI: `http://localhost:8080/swagger/index.html`. Страница открывается отдельно, из `frontend/`.
+Сервер слушает `http://localhost:8080`. Swagger UI: `http://localhost:8080/swagger/index.html`. Страница открывается отдельно:
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+Локальный клиент ходит на `http://localhost:8080/api/v1` — значение уже лежит в `frontend/.env.development`.
 
 При пустой базе создаются три категории (приветствия, семья, еда) и слова с транскрипцией.
 
@@ -53,13 +59,24 @@ Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых прими
 
 Авторизации, страйков, жизней и XP в API нет, поэтому профиль ученика целиком живёт в браузере (`localStorage`), а пароль с экрана входа никуда не отправляется.
 
+### Адрес API
+
+Клиент читает `NEXT_PUBLIC_API_URL`: это базовый путь `/api/v1`, без завершающего слэша. К нему дописываются `/categories`, `/words` и остальные маршруты.
+
+- локально (`next dev`) — `frontend/.env.development`: `http://localhost:8080/api/v1`
+- прод (`next build`, в том числе Vercel) — `frontend/.env.production`: `https://qaztil.onrender.com/api/v1`
+
+Хост продакшена: `https://qaztil.onrender.com/`. Проверка готовности: `https://qaztil.onrender.com/health`. Swagger: `https://qaztil.onrender.com/swagger/index.html`.
+
+Шаблон обеих строк — в `frontend/.env.example`.
+
 ### Деплой
 
 Сервисы не собирают файлы друг друга.
 
 **Render, API.** Root Directory — `backend`. Команду сборки оставьте ту, что Render ставит сам: `go build -tags netgo -ldflags '-s -w' -o app`. Start Command: `./app`. Health Check Path: `/health`. В `ALLOWED_ORIGINS` впишите адрес Vercel. Тот же контракт лежит в `render.yaml`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
 
-**Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). В переменных окружения задайте `NEXT_PUBLIC_API_URL`, например `https://qaztil.onrender.com/api/v1`.
+**Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). `NEXT_PUBLIC_API_URL` уже задан в `frontend/.env.production` как `https://qaztil.onrender.com/api/v1` и попадает в клиент на сборке. На Render в `ALLOWED_ORIGINS` впишите домен Vercel, иначе браузер отрежет ответы.
 
 Чтобы чужой коммит не пересобирал сервис: на Render в Build Filters включите путь `backend/**`, на Vercel в Ignored Build Step — `git diff HEAD^ HEAD --quiet -- frontend`.
 
