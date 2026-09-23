@@ -1,14 +1,15 @@
 services:
   - type: web
     name: qaztil
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    runtime: go
+    rootDir: backend
+    buildCommand: go build -tags netgo -ldflags '-s -w' -o app ./cmd/api
+    startCommand: ./app
     healthCheckPath: /health
     envVars:
       - key: DB_PATH
-        value: /app/data/qaztil.db
+        value: /var/data/qaztil.db
     disk:
       name: qaztil-data
-      mountPath: /app/data
+      mountPath: /var/data
       sizeGB: 1

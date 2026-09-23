@@ -4,7 +4,7 @@ APP := backend/bin/qaztil
 SWAG := github.com/swaggo/swag/cmd/swag@v1.16.4
 
 run:
-	cd backend && WEB_DIR=../frontend go run ./cmd/api
+	cd backend && go run ./cmd/api
 
 test:
 	cd backend && go test ./...
