@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: qaztil
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DB_PATH
+        value: /app/data/qaztil.db
+    disk:
+      name: qaztil-data
+      mountPath: /app/data
+      sizeGB: 1

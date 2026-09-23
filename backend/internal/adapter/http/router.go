@@ -1,8 +1,10 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -41,8 +43,8 @@ func NewAPI(
 	}
 }
 
-// NewHandler wires JSON routes, Swagger UI and the static frontend.
-func NewHandler(api *API) http.Handler {
+// NewHandler wires JSON routes, Swagger UI, the static page and a readiness check.
+func NewHandler(api *API, ready func(context.Context) error, webDir string) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -56,6 +58,8 @@ func NewHandler(api *API) http.Handler {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
+
+	r.Get("/health", healthHandler(ready))
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/categories", api.ListCategories)
@@ -79,7 +83,7 @@ func NewHandler(api *API) http.Handler {
 
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
 
-	files := http.FileServer(http.Dir(api.webDir))
+	files := http.FileServer(http.Dir(webDir))
 	r.NotFound(func(w http.ResponseWriter, req *http.Request) {
 		if strings.HasPrefix(req.URL.Path, "/api/") {
 			writeJSON(w, http.StatusNotFound, ErrorResponse{Error: "не найдено"})
@@ -89,4 +93,16 @@ func NewHandler(api *API) http.Handler {
 		files.ServeHTTP(plainWriter{w}, req)
 	})
 	return r
+}
+
+func healthHandler(ready func(context.Context) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		if err := ready(ctx); err != nil {
+			writeJSON(w, http.StatusServiceUnavailable, ErrorResponse{Error: "база недоступна"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	}
 }
