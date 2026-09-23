@@ -1,8 +1,5 @@
-import Image from "next/image";
-// import styles from "./page.module.css";
+import { OnboardingPage } from "@/views/onboarding";
 
-export default function Home() {
-  return (
-    <></>
-  );
+export default function Page() {
+  return <OnboardingPage />;
 }
