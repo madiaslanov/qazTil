@@ -14,15 +14,7 @@
 make run
 ```
 
-Сервер слушает `http://localhost:8080`. Swagger UI: `http://localhost:8080/swagger/index.html`.
-
-Клиент запускается отдельно:
-
-```bash
-make web
-```
-
-Страница открывается на `http://localhost:3000` и ходит в API по адресу из `NEXT_PUBLIC_API_URL` (см. `frontend/.env.example`).
+Сервер слушает `http://localhost:8080`. Страница: `/`. Swagger UI: `http://localhost:8080/swagger/index.html`.
 
 При пустой базе создаются три категории (приветствия, семья, еда) и слова с транскрипцией.
 
@@ -68,12 +60,18 @@ Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых прими
 ## Docker
 
 Образ в корне собирает только API из `backend/`.
+## Docker
+
+Образ собирает API и страницу из `frontend/`, запускает процесс не от root и проверяет готовность через `GET /health`.
 
 ```bash
 docker compose up --build
+docker compose ps
 ```
 
-На Render в сервисе выберите среду Docker, а не Native Go. Корень репозитория — `.`, файл сборки — `Dockerfile`. База SQLite лежит в контейнере в `/app/data` и сбрасывается при новом деплое, если к сервису не подключён диск по этому пути.
+Контейнер готов, когда статус `healthy`. Swagger: `http://localhost:8080/swagger/index.html`.
+
+На Render используйте `render.yaml`: среда Docker, проверка `/health` и диск `/app/data` для SQLite. Диск доступен на платном инстансе. На бесплатном плане уберите блок `disk`, тогда база будет жить только до следующего деплоя.
 
 ## Проверки
 

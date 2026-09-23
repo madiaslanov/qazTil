@@ -62,8 +62,11 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              cfg.addr,
-		Handler:           httpapi.NewHandler(api),
+		Handler:           httpapi.NewHandler(api, db.PingContext, cfg.webDir),
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	errCh := make(chan error, 1)

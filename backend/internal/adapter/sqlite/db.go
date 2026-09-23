@@ -48,6 +48,10 @@ func Open(path string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("enable foreign keys: %w", err)
 	}
+	if _, err := db.ExecContext(ctx, `PRAGMA journal_mode = WAL`); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("enable wal: %w", err)
+	}
 	return db, nil
 }
 
