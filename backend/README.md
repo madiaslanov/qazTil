@@ -24,7 +24,7 @@ make run
 
 - `ADDR` — адрес, по умолчанию `:8080`. Если задан `PORT` (так делает Render), сервер слушает `:$PORT`
 - `DB_PATH` — файл SQLite, по умолчанию `data/qaztil.db`
-- `ALLOWED_ORIGINS` — домены фронтенда через запятую, по умолчанию `http://localhost:3000`. На Render впишите сюда адрес Vercel
+- `ALLOWED_ORIGINS` — домены фронтенда через запятую. По умолчанию `http://localhost:3000` и `https://qaz-til.vercel.app`
 - `WEB_DIR` — каталог статики. По умолчанию пуст: сервер статику не отдаёт
 
 ## Связка с фронтендом
@@ -34,7 +34,7 @@ make run
 - локально (`next dev`) — `frontend/.env.development`: `http://localhost:8080/api/v1`
 - прод (`next build`, Vercel) — `frontend/.env.production`: `https://qaztil.onrender.com/api/v1`
 
-Шаблон обеих строк — в `frontend/.env.example`. Пока в `ALLOWED_ORIGINS` нет домена страницы, браузер ответы не примет.
+Шаблон обеих строк — в `frontend/.env.example`. Страница на проде — `https://qaz-til.vercel.app`, этот origin уже входит в `ALLOWED_ORIGINS`.
 
 ## API
 
