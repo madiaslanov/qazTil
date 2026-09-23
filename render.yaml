@@ -3,7 +3,7 @@ services:
     name: qaztil
     runtime: go
     rootDir: backend
-    buildCommand: go build -tags netgo -ldflags '-s -w' -o app ./cmd/api
+    buildCommand: go build -tags netgo -ldflags '-s -w' -o app
     startCommand: ./app
     healthCheckPath: /health
     envVars:

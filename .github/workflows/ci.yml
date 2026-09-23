@@ -22,7 +22,7 @@ jobs:
           go-version-file: backend/go.mod
       - name: Check formatting
         working-directory: backend
-        run: test -z "$(gofmt -l cmd internal)"
+        run: test -z "$(gofmt -l main.go internal)"
       - name: Vet
         working-directory: backend
         run: go vet ./...
@@ -31,4 +31,4 @@ jobs:
         run: go test ./...
       - name: Build
         working-directory: backend
-        run: go build -o bin/qaztil ./cmd/api
+        run: go build -tags netgo -ldflags '-s -w' -o app .
