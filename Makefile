@@ -4,20 +4,20 @@ APP := backend/bin/qaztil
 SWAG := github.com/swaggo/swag/cmd/swag@v1.16.4
 
 run:
-	cd backend && go run ./cmd/api
+	cd backend && go run .
 
 test:
 	cd backend && go test ./...
 
 build:
 	mkdir -p backend/bin
-	cd backend && go build -o bin/qaztil ./cmd/api
+	cd backend && go build -tags netgo -ldflags '-s -w' -o bin/qaztil .
 
 fmt:
-	gofmt -w backend/cmd backend/internal
+	gofmt -w backend/main.go backend/internal
 
 swagger:
-	cd backend && go run $(SWAG) init -g main.go -d cmd/api,internal -o internal/adapter/http/docs --parseInternal --parseDependency --exclude internal/adapter/http/docs
+	cd backend && go run $(SWAG) init -g main.go -d .,internal -o internal/adapter/http/docs --parseInternal --parseDependency --exclude internal/adapter/http/docs
 
 docker:
 	docker compose up --build

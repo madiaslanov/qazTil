@@ -2,7 +2,7 @@
 
 Базовое приложение для изучения казахского языка. Словарь, категории, квиз и прогресс одного локального ученика. Авторизации нет.
 
-Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и SQLite, `cmd/api` собирает их вместе. Клиент — в `frontend/`: Next.js (App Router) по архитектуре Feature-Sliced Design.
+Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и SQLite, `main.go` собирает их вместе. Клиент — в `frontend/`: Next.js (App Router) по архитектуре Feature-Sliced Design.
 
 Фронтенд и бэкенд деплоятся отдельно: страница — на Vercel, API — на Render. Поэтому сервер отдаёт только JSON и разрешает запросы с домена фронтенда через CORS.
 
@@ -57,7 +57,7 @@ Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых прими
 
 Сервисы не собирают файлы друг друга.
 
-**Render, API.** В уже созданном сервисе укажите Root Directory `backend`, Build Command `go build -tags netgo -ldflags '-s -w' -o app ./cmd/api`, Start Command `./app`. Health Check Path: `/health`. В `ALLOWED_ORIGINS` впишите адрес Vercel. Тот же контракт лежит в `render.yaml`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
+**Render, API.** Root Directory — `backend`. Команду сборки оставьте ту, что Render ставит сам: `go build -tags netgo -ldflags '-s -w' -o app`. Start Command: `./app`. Health Check Path: `/health`. В `ALLOWED_ORIGINS` впишите адрес Vercel. Тот же контракт лежит в `render.yaml`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
 
 **Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). В переменных окружения задайте `NEXT_PUBLIC_API_URL`, например `https://qaztil.onrender.com/api/v1`.
 
