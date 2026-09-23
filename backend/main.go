@@ -111,12 +111,15 @@ func loadConfig() config {
 	}
 }
 
-// allowedOrigins задаётся через ALLOWED_ORIGINS списком через запятую,
-// например "https://qaztil.vercel.app". По умолчанию открыт локальный фронтенд.
+// allowedOrigins задаётся через ALLOWED_ORIGINS списком через запятую.
+// По умолчанию открыты локальный фронтенд и страница на Vercel.
 func allowedOrigins() []string {
 	raw := os.Getenv("ALLOWED_ORIGINS")
 	if raw == "" {
-		return []string{"http://localhost:3000"}
+		return []string{
+			"http://localhost:3000",
+			"https://qaz-til.vercel.app",
+		}
 	}
 	origins := make([]string, 0, 4)
 	for _, origin := range strings.Split(raw, ",") {

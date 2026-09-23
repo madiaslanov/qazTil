@@ -9,6 +9,8 @@ services:
     envVars:
       - key: DB_PATH
         value: /var/data/qaztil.db
+      - key: ALLOWED_ORIGINS
+        value: https://qaz-til.vercel.app,http://localhost:3000
     disk:
       name: qaztil-data
       mountPath: /var/data

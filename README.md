@@ -28,7 +28,7 @@ cd frontend && npm install && npm run dev
 
 - `ADDR` — адрес, по умолчанию `:8080`. Если задан `PORT` (так делает Render), сервер слушает `:$PORT`
 - `DB_PATH` — файл SQLite, по умолчанию `data/qaztil.db`
-- `ALLOWED_ORIGINS` — домены фронтенда через запятую, по умолчанию `http://localhost:3000`. На Render впишите сюда адрес Vercel
+- `ALLOWED_ORIGINS` — домены фронтенда через запятую. По умолчанию `http://localhost:3000` и `https://qaz-til.vercel.app`
 - `WEB_DIR` — каталог статики. По умолчанию пуст: сервер статику не отдаёт
 
 ## API
@@ -74,9 +74,9 @@ Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых прими
 
 Сервисы не собирают файлы друг друга.
 
-**Render, API.** Root Directory — `backend`. Команду сборки оставьте ту, что Render ставит сам: `go build -tags netgo -ldflags '-s -w' -o app`. Start Command: `./app`. Health Check Path: `/health`. В `ALLOWED_ORIGINS` впишите адрес Vercel. Тот же контракт лежит в `render.yaml`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
+**Render, API.** Root Directory — `backend`. Команду сборки оставьте ту, что Render ставит сам: `go build -tags netgo -ldflags '-s -w' -o app`. Start Command: `./app`. Health Check Path: `/health`. `ALLOWED_ORIGINS` в `render.yaml` уже включает `https://qaz-til.vercel.app`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
 
-**Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). `NEXT_PUBLIC_API_URL` уже задан в `frontend/.env.production` как `https://qaztil.onrender.com/api/v1` и попадает в клиент на сборке. На Render в `ALLOWED_ORIGINS` впишите домен Vercel, иначе браузер отрежет ответы.
+**Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). Адрес страницы: `https://qaz-til.vercel.app`. `NEXT_PUBLIC_API_URL` уже задан в `frontend/.env.production` как `https://qaztil.onrender.com/api/v1` и попадает в клиент на сборке.
 
 Чтобы чужой коммит не пересобирал сервис: на Render в Build Filters включите путь `backend/**`, на Vercel в Ignored Build Step — `git diff HEAD^ HEAD --quiet -- frontend`.
 
