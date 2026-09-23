@@ -4,21 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-import { categoryApi } from "@/entities/category";
-import { wordApi } from "@/entities/word";
+import { useQuery } from "@tanstack/react-query";
+
+import { categoryQueries } from "@/entities/category";
+import { wordQueries } from "@/entities/word";
 import { cn } from "@/shared/lib/cn";
-import { useRequest } from "@/shared/lib/use-request";
 import { Button, Card, Screen, StateNote } from "@/shared/ui";
 import { BottomNav } from "@/widgets/bottom-nav";
 
 /** Словарь: слова из API с фильтром по категории. */
 export function WordsPage() {
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const categories = useRequest(() => categoryApi.list(), "categories");
-  const words = useRequest(
-    () => wordApi.list(categoryId ?? undefined),
-    `words:${categoryId ?? "all"}`,
-  );
+  const categories = useQuery(categoryQueries.all());
+  const words = useQuery(wordQueries.list(categoryId));
 
   return (
     <Screen>
@@ -45,16 +43,16 @@ export function WordsPage() {
           ))}
         </div>
 
-        {words.loading && <StateNote text="Открываем словарь…" />}
-        {words.error && (
+        {words.isPending && <StateNote text="Открываем словарь…" />}
+        {words.isError && (
           <StateNote
-            text={words.error}
+            text={words.error.message}
             action={
               <Button
                 size="md"
                 variant="quiet"
                 className="w-auto"
-                onClick={words.retry}
+                onClick={() => words.refetch()}
               >
                 Повторить
               </Button>

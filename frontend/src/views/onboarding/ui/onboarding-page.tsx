@@ -4,18 +4,24 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { useLearner } from "@/entities/learner";
+import { useLearnerStore } from "@/entities/learner";
 import { OnboardingForm } from "@/features/onboarding";
 import { Screen } from "@/shared/ui";
 
 /** Первый экран: приветствие, поля входа и выбор дневной цели. */
 export function OnboardingPage() {
   const router = useRouter();
-  const learner = useLearner();
+  const learner = useLearnerStore((state) => state.learner);
+  const hydrated = useLearnerStore((state) => state.hydrated);
 
   useEffect(() => {
     if (learner) router.replace("/learn");
   }, [learner, router]);
+
+  // Пока persist не поднялся, не мигаем формой тому, кто уже учится.
+  if (!hydrated || learner) {
+    return <Screen />;
+  }
 
   return (
     <Screen>

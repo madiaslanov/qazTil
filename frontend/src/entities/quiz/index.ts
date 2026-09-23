@@ -1,2 +1,2 @@
 export type { AnswerResult, Question, Quiz, Score } from "./model/types";
-export { quizApi } from "./api/quiz-api";
+export { quizApi, quizQueries } from "./api/quiz-queries";

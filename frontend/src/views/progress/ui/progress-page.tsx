@@ -1,14 +1,15 @@
 "use client";
 
-import { progressApi } from "@/entities/progress";
-import { useRequest } from "@/shared/lib/use-request";
+import { useQuery } from "@tanstack/react-query";
+
+import { progressQueries } from "@/entities/progress";
 import { Button, Card, Progress, Screen, StateNote } from "@/shared/ui";
 import { BottomNav } from "@/widgets/bottom-nav";
 import { TopBar } from "@/widgets/top-bar";
 
 /** Прогресс по категориям: то, что считает сам сервер. */
 export function ProgressPage() {
-  const progress = useRequest(() => progressApi.list(), "progress");
+  const progress = useQuery(progressQueries.all());
 
   return (
     <Screen>
@@ -22,16 +23,16 @@ export function ProgressPage() {
           <h1 className="mt-1 text-[26px]">Твой прогресс</h1>
         </div>
 
-        {progress.loading && <StateNote text="Считаем ответы…" />}
-        {progress.error && (
+        {progress.isPending && <StateNote text="Считаем ответы…" />}
+        {progress.isError && (
           <StateNote
-            text={progress.error}
+            text={progress.error.message}
             action={
               <Button
                 size="md"
                 variant="quiet"
                 className="w-auto"
-                onClick={progress.retry}
+                onClick={() => progress.refetch()}
               >
                 Повторить
               </Button>

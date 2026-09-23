@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, Flame, Heart, Target } from "lucide-react";
 
-import { learnerStore, useLearner, type DailyGoal } from "@/entities/learner";
+import { useLearnerStore, type DailyGoal } from "@/entities/learner";
 import { SWAGGER_URL } from "@/shared/config/env";
 import { cn } from "@/shared/lib/cn";
 import { Button, Card, IconBadge, Screen } from "@/shared/ui";
@@ -16,10 +16,12 @@ const goals: DailyGoal[] = [5, 10, 15];
 /** Профиль ученика: локальные счётчики и настройки цели. */
 export function ProfilePage() {
   const router = useRouter();
-  const learner = useLearner();
+  const learner = useLearnerStore((state) => state.learner);
+  const setDailyGoal = useLearnerStore((state) => state.setDailyGoal);
+  const reset = useLearnerStore((state) => state.reset);
 
   function signOut() {
-    learnerStore.reset();
+    reset();
     router.replace("/");
   }
 
@@ -67,7 +69,7 @@ export function ProfilePage() {
               <button
                 key={goal}
                 type="button"
-                onClick={() => learnerStore.setDailyGoal(goal)}
+                onClick={() => setDailyGoal(goal)}
                 aria-pressed={learner?.dailyGoal === goal}
                 className={cn(
                   "h-[52px] flex-1 rounded-field border-[3px] border-ink text-[15px] font-extrabold",

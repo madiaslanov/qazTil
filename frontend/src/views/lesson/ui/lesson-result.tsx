@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, Flame, Target } from "lucide-react";
 
-import { useLearner, XP_PER_CORRECT_ANSWER } from "@/entities/learner";
+import { useLearnerStore, XP_PER_CORRECT_ANSWER } from "@/entities/learner";
 import type { Quiz } from "@/entities/quiz";
 import { Button, Card, IconBadge, Screen } from "@/shared/ui";
 
@@ -18,7 +18,7 @@ function plural(days: number) {
 
 /** Экран после урока: XP, страйк и точность прохождения. */
 export function LessonResult({ quiz }: { quiz: Quiz }) {
-  const learner = useLearner();
+  const streak = useLearnerStore((state) => state.learner?.streak ?? 0);
   const accuracy =
     quiz.score.total === 0
       ? 0
@@ -63,7 +63,7 @@ export function LessonResult({ quiz }: { quiz: Quiz }) {
                   Страйк
                 </p>
                 <p className="text-[19px]">
-                  {learner?.streak ?? 0} {plural(learner?.streak ?? 0)}
+                  {streak} {plural(streak)}
                 </p>
               </div>
             </div>

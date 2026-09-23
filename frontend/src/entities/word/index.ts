@@ -1,2 +1,2 @@
 export type { Word } from "./model/types";
-export { wordApi } from "./api/word-api";
+export { wordQueries } from "./api/word-queries";

@@ -2,7 +2,9 @@
 
 Базовое приложение для изучения казахского языка. Словарь, категории, квиз и прогресс одного локального ученика. Авторизации нет.
 
-Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и SQLite, `cmd/api` собирает их вместе. Статичная страница — в `frontend/`.
+Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и SQLite, `cmd/api` собирает их вместе. Клиент — в `frontend/`: Next.js (App Router) по архитектуре Feature-Sliced Design.
+
+Фронтенд и бэкенд деплоятся отдельно: страница — на Vercel, API — на Render. Поэтому сервер отдаёт только JSON и разрешает запросы с домена фронтенда через CORS.
 
 ## Запуск
 
@@ -12,7 +14,15 @@
 make run
 ```
 
-Сервер слушает `http://localhost:8080`. Страница-макет: `/`. Swagger UI: `http://localhost:8080/swagger/index.html`.
+Сервер слушает `http://localhost:8080`. Swagger UI: `http://localhost:8080/swagger/index.html`.
+
+Клиент запускается отдельно:
+
+```bash
+make web
+```
+
+Страница открывается на `http://localhost:3000` и ходит в API по адресу из `NEXT_PUBLIC_API_URL` (см. `frontend/.env.example`).
 
 При пустой базе создаются три категории (приветствия, семья, еда) и слова с транскрипцией.
 
@@ -20,7 +30,8 @@ make run
 
 - `ADDR` — адрес, по умолчанию `:8080`. Если задан `PORT` (так делает Render), сервер слушает `:$PORT`
 - `DB_PATH` — файл SQLite, по умолчанию `data/qaztil.db`
-- `WEB_DIR` — каталог статики, по умолчанию `../frontend` (относительно `backend/`)
+- `ALLOWED_ORIGINS` — домены фронтенда через запятую, по умолчанию `http://localhost:3000`. На Render впишите сюда адрес Vercel
+- `WEB_DIR` — каталог статики. По умолчанию пуст: сервер статику не отдаёт
 
 ## API
 
@@ -33,11 +44,30 @@ make run
 - `GET /quizzes/{id}` — счёт
 - `GET /progress` — ответы по каждой категории
 
-Файлы в `frontend/` — статичный каркас. Логику интерфейса сюда подключит фронтенд.
+## Фронтенд
+
+Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых примитивов, TanStack Query для запросов к API и Zustand для локального профиля ученика. Вёрстка собрана по макету Figma «QazTil».
+
+Слои FSD лежат в `frontend/src/`:
+
+- `app/` — роутер Next и провайдеры
+- `views/` — экраны (слой страниц FSD; имя `pages` занято роутером)
+- `widgets/` — шапка, нижняя навигация, путь обучения
+- `features/` — онбординг и прохождение урока
+- `entities/` — категории, слова, квиз, прогресс, профиль ученика
+- `shared/` — HTTP-клиент, токены дизайна, UI-кит
+
+Экраны: `/` — онбординг, `/learn` — путь обучения, `/lesson/{categoryId}` — урок и его итог, `/progress` — прогресс по категориям, `/profile` — профиль, `/words` — словарь.
+
+Авторизации, страйков, жизней и XP в API нет, поэтому профиль ученика целиком живёт в браузере (`localStorage`), а пароль с экрана входа никуда не отправляется.
+
+### Деплой на Vercel
+
+Корень проекта — `frontend/`, сборка стандартная (`next build`). В переменных окружения задайте `NEXT_PUBLIC_API_URL`, например `https://qaztil.onrender.com/api/v1`, а на стороне Render — `ALLOWED_ORIGINS` с адресом Vercel.
 
 ## Docker
 
-Образ в корне собирает API из `backend/` и кладёт рядом страницу из `frontend/`.
+Образ в корне собирает только API из `backend/`.
 
 ```bash
 docker compose up --build
@@ -51,4 +81,6 @@ docker compose up --build
 make test
 make build
 make swagger
+make web-build
+make web-lint
 ```

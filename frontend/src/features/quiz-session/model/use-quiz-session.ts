@@ -1,93 +1,99 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { learnerStore } from "@/entities/learner";
-import { quizApi, type Quiz } from "@/entities/quiz";
+import { useLearnerStore } from "@/entities/learner";
+import { progressQueries } from "@/entities/progress";
+import { quizApi, quizQueries } from "@/entities/quiz";
 import { ApiError } from "@/shared/api";
 
-type Status = "loading" | "running" | "finished" | "failed";
+function messageOf(cause: unknown, fallback: string) {
+  return cause instanceof ApiError ? cause.message : fallback;
+}
 
 /**
- * Один проход квиза: сервер держит вопросы и счёт,
- * хук — только текущий вопрос и состояние проверки.
+ * Один проход урока: вопросы и счёт держит сервер,
+ * хук отвечает за текущий вопрос и состояние проверки.
  */
 export function useQuizSession(categoryId: number, size: number) {
-  const [status, setStatus] = useState<Status>("loading");
-  const [error, setError] = useState<string | null>(null);
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const queryClient = useQueryClient();
+  const loseLife = useLearnerStore((state) => state.loseLife);
+  const completeLesson = useLearnerStore((state) => state.completeLesson);
+
+  const options = quizQueries.session(categoryId, size);
+  const session = useQuery(options);
+
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
-  const [checking, setChecking] = useState(false);
+  const [finished, setFinished] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    quizApi
-      .start(categoryId, size)
-      .then((started) => {
-        if (cancelled) return;
-        setQuiz(started);
-        setStatus("running");
-      })
-      .catch((cause: unknown) => {
-        if (cancelled) return;
-        setError(
-          cause instanceof ApiError ? cause.message : "не вышло начать урок",
-        );
-        setStatus("failed");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [categoryId, size]);
+  const quiz = session.data ?? null;
+
+  const answer = useMutation({
+    mutationFn: (variables: { questionId: number; selectedIndex: number }) => {
+      if (!quiz) throw new ApiError("урок ещё не готов", 0);
+      return quizApi.answer(
+        quiz.id,
+        variables.questionId,
+        variables.selectedIndex,
+      );
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData(options.queryKey, result.quiz);
+      setCorrectIndex(result.correct_index);
+      if (!result.correct) loseLife();
+    },
+  });
 
   const question = quiz?.questions[index] ?? null;
   const total = quiz?.questions.length ?? 0;
-  const checked = correctIndex !== null;
 
-  const check = useCallback(async () => {
-    if (!quiz || !question || selected === null || checked || checking) return;
-    setChecking(true);
-    try {
-      const result = await quizApi.answer(quiz.id, question.id, selected);
-      setQuiz(result.quiz);
-      setCorrectIndex(result.correct_index);
-      if (!result.correct) {
-        learnerStore.loseLife();
-      }
-    } catch (cause: unknown) {
-      setError(
-        cause instanceof ApiError ? cause.message : "ответ не сохранился",
-      );
-    } finally {
-      setChecking(false);
-    }
-  }, [checked, checking, question, quiz, selected]);
+  const check = useCallback(() => {
+    if (!question || selected === null || correctIndex !== null) return;
+    answer.mutate({ questionId: question.id, selectedIndex: selected });
+  }, [answer, correctIndex, question, selected]);
 
   const next = useCallback(() => {
     if (!quiz) return;
     setSelected(null);
     setCorrectIndex(null);
+
     if (index + 1 >= quiz.questions.length) {
-      learnerStore.completeLesson(quiz.category_id, quiz.score.correct);
-      setStatus("finished");
+      completeLesson(quiz.category_id, quiz.score.correct);
+      void queryClient.invalidateQueries({
+        queryKey: progressQueries.all().queryKey,
+      });
+      setFinished(true);
       return;
     }
     setIndex(index + 1);
-  }, [index, quiz]);
+  }, [completeLesson, index, queryClient, quiz]);
+
+  const status = finished
+    ? "finished"
+    : session.isPending
+      ? "loading"
+      : session.isError || !question
+        ? "failed"
+        : "running";
 
   return {
     status,
-    error,
+    error: session.isError
+      ? messageOf(session.error, "не вышло начать урок")
+      : answer.isError
+        ? messageOf(answer.error, "ответ не сохранился")
+        : null,
     quiz,
     question,
     index,
     total,
     selected,
     correctIndex,
-    checked,
-    checking,
+    checked: correctIndex !== null,
+    checking: answer.isPending,
     select: setSelected,
     check,
     next,

@@ -2,11 +2,11 @@
 
 import { Flame, Heart } from "lucide-react";
 
-import { useLearner } from "@/entities/learner";
+import { useLearnerStore } from "@/entities/learner";
 
 /** Шапка макета: логотип слева, страйк и жизни справа. */
 export function TopBar() {
-  const learner = useLearner();
+  const learner = useLearnerStore((state) => state.learner);
 
   return (
     <header className="flex h-[82px] shrink-0 items-center justify-between border-b-[3px] border-ink px-6">

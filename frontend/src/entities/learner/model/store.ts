@@ -1,110 +1,101 @@
-import { readJSON, writeJSON } from "@/shared/lib/storage";
-import { MAX_LIVES, XP_PER_CORRECT_ANSWER, type DailyGoal, type Learner } from "./types";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-const KEY = "qaztil.learner";
+import {
+  MAX_LIVES,
+  XP_PER_CORRECT_ANSWER,
+  type DailyGoal,
+  type Learner,
+} from "./types";
 
-const listeners = new Set<() => void>();
-let cache: Learner | null | undefined;
+type LearnerState = {
+  learner: Learner | null;
+  /** persist поднимается вручную в провайдере, до этого состояние пустое. */
+  hydrated: boolean;
+  create: (email: string, dailyGoal: DailyGoal) => void;
+  setDailyGoal: (dailyGoal: DailyGoal) => void;
+  loseLife: () => void;
+  completeLesson: (categoryId: number, correctAnswers: number) => void;
+  reset: () => void;
+  markHydrated: () => void;
+};
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function yesterday(): string {
+function day(offset = 0): string {
   const date = new Date();
-  date.setDate(date.getDate() - 1);
+  date.setDate(date.getDate() + offset);
   return date.toISOString().slice(0, 10);
 }
 
-function emit() {
-  for (const listener of listeners) listener();
-}
+export const useLearnerStore = create<LearnerState>()(
+  persist(
+    (set) => ({
+      learner: null,
+      hydrated: false,
 
-function persist(learner: Learner) {
-  cache = learner;
-  writeJSON(KEY, learner);
-  emit();
-}
+      create: (email, dailyGoal) =>
+        set({
+          learner: {
+            email,
+            dailyGoal,
+            xp: 0,
+            lives: MAX_LIVES,
+            streak: 0,
+            lastLessonOn: null,
+            completedCategoryIds: [],
+          },
+        }),
 
-export const learnerStore = {
-  subscribe(listener: () => void) {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  },
+      setDailyGoal: (dailyGoal) =>
+        set(({ learner }) => ({
+          learner: learner ? { ...learner, dailyGoal } : null,
+        })),
 
-  get(): Learner | null {
-    if (cache === undefined) {
-      cache = readJSON<Learner>(KEY);
-    }
-    return cache;
-  },
+      loseLife: () =>
+        set(({ learner }) => ({
+          learner: learner
+            ? { ...learner, lives: Math.max(0, learner.lives - 1) }
+            : null,
+        })),
 
-  /** На сервере профиля нет — рисуем пустое состояние до гидратации. */
-  getServerSnapshot(): Learner | null {
-    return null;
-  },
+      completeLesson: (categoryId, correctAnswers) =>
+        set(({ learner }) => {
+          if (!learner) return { learner };
+          const today = day();
+          const streak =
+            learner.lastLessonOn === today
+              ? learner.streak
+              : learner.lastLessonOn === day(-1)
+                ? learner.streak + 1
+                : 1;
 
-  create(email: string, dailyGoal: DailyGoal): Learner {
-    const learner: Learner = {
-      email,
-      dailyGoal,
-      xp: 0,
-      lives: MAX_LIVES,
-      streak: 0,
-      lastLessonOn: null,
-      completedCategoryIds: [],
-    };
-    persist(learner);
-    return learner;
-  },
+          return {
+            learner: {
+              ...learner,
+              xp: learner.xp + correctAnswers * XP_PER_CORRECT_ANSWER,
+              lives: MAX_LIVES,
+              streak,
+              lastLessonOn: today,
+              completedCategoryIds: learner.completedCategoryIds.includes(
+                categoryId,
+              )
+                ? learner.completedCategoryIds
+                : [...learner.completedCategoryIds, categoryId],
+            },
+          };
+        }),
 
-  setDailyGoal(dailyGoal: DailyGoal) {
-    const learner = learnerStore.get();
-    if (!learner) return;
-    persist({ ...learner, dailyGoal });
-  },
+      reset: () => set({ learner: null }),
 
-  /** Ошибка в вопросе стоит жизни; ниже нуля не уходим. */
-  loseLife() {
-    const learner = learnerStore.get();
-    if (!learner) return;
-    persist({ ...learner, lives: Math.max(0, learner.lives - 1) });
-  },
-
-  /** Урок закрыт: начисляем XP, продлеваем страйк, восстанавливаем жизни. */
-  completeLesson(categoryId: number, correctAnswers: number) {
-    const learner = learnerStore.get();
-    if (!learner) return;
-
-    const day = today();
-    const streak =
-      learner.lastLessonOn === day
-        ? learner.streak
-        : learner.lastLessonOn === yesterday()
-          ? learner.streak + 1
-          : 1;
-
-    persist({
-      ...learner,
-      xp: learner.xp + correctAnswers * XP_PER_CORRECT_ANSWER,
-      lives: MAX_LIVES,
-      streak,
-      lastLessonOn: day,
-      completedCategoryIds: learner.completedCategoryIds.includes(categoryId)
-        ? learner.completedCategoryIds
-        : [...learner.completedCategoryIds, categoryId],
-    });
-  },
-
-  reset() {
-    cache = null;
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.removeItem(KEY);
-      } catch {
-        // молча: приватное окно
-      }
-    }
-    emit();
-  },
-};
+      markHydrated: () => set({ hydrated: true }),
+    }),
+    {
+      name: "qaztil.learner",
+      storage: createJSONStorage(() => localStorage),
+      partialize: ({ learner }) => ({ learner }),
+      skipHydration: true,
+      onRehydrateStorage: () => (state) => {
+        state?.markHydrated();
+      },
+    },
+  ),
+);

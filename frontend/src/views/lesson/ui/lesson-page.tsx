@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 
-import { useLearner } from "@/entities/learner";
+import { useLearnerStore } from "@/entities/learner";
 import { QuizSession } from "@/features/quiz-session";
 import type { Quiz } from "@/entities/quiz";
 import { Screen } from "@/shared/ui";
@@ -16,7 +16,7 @@ function questionsFor(goalMinutes: number | undefined) {
 }
 
 export function LessonPage({ categoryId }: { categoryId: number }) {
-  const learner = useLearner();
+  const dailyGoal = useLearnerStore((state) => state.learner?.dailyGoal);
   const [finished, setFinished] = useState<Quiz | null>(null);
   const onFinished = useCallback((quiz: Quiz) => setFinished(quiz), []);
 
@@ -36,7 +36,7 @@ export function LessonPage({ categoryId }: { categoryId: number }) {
       <div className="relative flex min-h-0 flex-1 flex-col">
         <QuizSession
           categoryId={categoryId}
-          size={questionsFor(learner?.dailyGoal)}
+          size={questionsFor(dailyGoal)}
           onFinished={onFinished}
         />
       </div>

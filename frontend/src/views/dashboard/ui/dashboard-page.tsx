@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 
-import { categoryApi } from "@/entities/category";
-import { useLearner } from "@/entities/learner";
-import { useRequest } from "@/shared/lib/use-request";
+import { useQuery } from "@tanstack/react-query";
+
+import { categoryQueries } from "@/entities/category";
+import { useLearnerStore } from "@/entities/learner";
 import { Button, Screen, StateNote } from "@/shared/ui";
 import { BottomNav } from "@/widgets/bottom-nav";
 import { SkillTree } from "@/widgets/skill-tree";
@@ -12,8 +13,10 @@ import { TopBar } from "@/widgets/top-bar";
 
 /** Путь обучения: категории из API выстроены цепочкой уроков. */
 export function DashboardPage() {
-  const learner = useLearner();
-  const categories = useRequest(() => categoryApi.list(), "categories");
+  const completedIds = useLearnerStore(
+    (state) => state.learner?.completedCategoryIds,
+  );
+  const categories = useQuery(categoryQueries.all());
 
   return (
     <Screen>
@@ -35,16 +38,16 @@ export function DashboardPage() {
           <h1 className="mt-1 text-[26px]">Твой путь обучения</h1>
 
           <div className="mt-[20px] flex-1">
-            {categories.loading && <StateNote text="Загружаем категории…" />}
-            {categories.error && (
+            {categories.isPending && <StateNote text="Загружаем категории…" />}
+            {categories.isError && (
               <StateNote
-                text={categories.error}
+                text={categories.error.message}
                 action={
                   <Button
                     size="md"
                     variant="quiet"
                     className="w-auto"
-                    onClick={categories.retry}
+                    onClick={() => categories.refetch()}
                   >
                     Повторить
                   </Button>
@@ -54,7 +57,7 @@ export function DashboardPage() {
             {categories.data && (
               <SkillTree
                 categories={categories.data}
-                completedIds={learner?.completedCategoryIds ?? []}
+                completedIds={completedIds ?? []}
               />
             )}
           </div>

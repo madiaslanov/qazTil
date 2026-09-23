@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { learnerStore, type DailyGoal } from "@/entities/learner";
+import { useLearnerStore, type DailyGoal } from "@/entities/learner";
 import { Button, Input, Label } from "@/shared/ui";
 
 import { GoalPicker } from "./goal-picker";
@@ -14,13 +14,14 @@ import { GoalPicker } from "./goal-picker";
  */
 export function OnboardingForm() {
   const router = useRouter();
+  const createLearner = useLearnerStore((state) => state.create);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [goal, setGoal] = useState<DailyGoal>(10);
 
   function start(event: React.FormEvent) {
     event.preventDefault();
-    learnerStore.create(email.trim() || "ученик", goal);
+    createLearner(email.trim() || "ученик", goal);
     router.push("/learn");
   }
 
