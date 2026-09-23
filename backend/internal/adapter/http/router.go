@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	_ "github.com/madiaslanov/qazTil/internal/adapter/http/docs"
@@ -19,6 +20,7 @@ type API struct {
 	quizzes    *usecase.QuizService
 	progress   *usecase.ProgressService
 	webDir     string
+	origins    []string
 }
 
 func NewAPI(
@@ -27,6 +29,7 @@ func NewAPI(
 	quizzes *usecase.QuizService,
 	progress *usecase.ProgressService,
 	webDir string,
+	origins []string,
 ) *API {
 	return &API{
 		categories: categories,
@@ -34,6 +37,7 @@ func NewAPI(
 		quizzes:    quizzes,
 		progress:   progress,
 		webDir:     webDir,
+		origins:    origins,
 	}
 }
 
@@ -44,6 +48,14 @@ func NewHandler(api *API) http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	// Фронтенд живёт на своём домене (Vercel), поэтому браузеру нужен CORS.
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   api.origins,
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+		AllowedHeaders:   []string{"Accept", "Content-Type"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/categories", api.ListCategories)

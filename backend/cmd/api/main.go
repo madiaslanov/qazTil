@@ -57,6 +57,7 @@ func main() {
 		usecase.NewQuizService(categories, words, quizzes, progress),
 		usecase.NewProgressService(categories, progress),
 		cfg.webDir,
+		cfg.origins,
 	)
 
 	srv := &http.Server{
@@ -90,17 +91,35 @@ func main() {
 }
 
 type config struct {
-	addr   string
-	dbPath string
-	webDir string
+	addr    string
+	dbPath  string
+	webDir  string
+	origins []string
 }
 
 func loadConfig() config {
 	return config{
-		addr:   listenAddr(),
-		dbPath: env("DB_PATH", "data/qaztil.db"),
-		webDir: env("WEB_DIR", "../frontend"),
+		addr:    listenAddr(),
+		dbPath:  env("DB_PATH", "data/qaztil.db"),
+		webDir:  env("WEB_DIR", "../frontend"),
+		origins: allowedOrigins(),
 	}
+}
+
+// allowedOrigins задаётся через ALLOWED_ORIGINS списком через запятую,
+// например "https://qaztil.vercel.app". По умолчанию открыт локальный фронтенд.
+func allowedOrigins() []string {
+	raw := os.Getenv("ALLOWED_ORIGINS")
+	if raw == "" {
+		return []string{"http://localhost:3000"}
+	}
+	origins := make([]string, 0, 4)
+	for _, origin := range strings.Split(raw, ",") {
+		if trimmed := strings.TrimSpace(origin); trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+	return origins
 }
 
 func listenAddr() string {
