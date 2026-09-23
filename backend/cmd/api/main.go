@@ -24,8 +24,10 @@ import (
 // @schemes http
 func main() {
 	cfg := loadConfig()
-	if _, err := os.Stat(cfg.webDir); err != nil {
-		log.Fatalf("web dir: %v", err)
+	if cfg.webDir != "" {
+		if _, err := os.Stat(cfg.webDir); err != nil {
+			log.Fatalf("web dir: %v", err)
+		}
 	}
 
 	db, err := sqlite.Open(cfg.dbPath)
@@ -104,7 +106,7 @@ func loadConfig() config {
 	return config{
 		addr:    listenAddr(),
 		dbPath:  env("DB_PATH", "data/qaztil.db"),
-		webDir:  env("WEB_DIR", "../frontend"),
+		webDir:  env("WEB_DIR", ""),
 		origins: allowedOrigins(),
 	}
 }

@@ -14,7 +14,7 @@
 make run
 ```
 
-Сервер слушает `http://localhost:8080`. Страница: `/`. Swagger UI: `http://localhost:8080/swagger/index.html`.
+Сервер слушает `http://localhost:8080`. Swagger UI: `http://localhost:8080/swagger/index.html`. Страница открывается отдельно, из `frontend/`.
 
 При пустой базе создаются три категории (приветствия, семья, еда) и слова с транскрипцией.
 
@@ -53,16 +53,19 @@ Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых прими
 
 Авторизации, страйков, жизней и XP в API нет, поэтому профиль ученика целиком живёт в браузере (`localStorage`), а пароль с экрана входа никуда не отправляется.
 
-### Деплой на Vercel
+### Деплой
 
-Корень проекта — `frontend/`, сборка стандартная (`next build`). В переменных окружения задайте `NEXT_PUBLIC_API_URL`, например `https://qaztil.onrender.com/api/v1`, а на стороне Render — `ALLOWED_ORIGINS` с адресом Vercel.
+Сервисы не собирают файлы друг друга.
+
+**Render, API.** В уже созданном сервисе укажите Root Directory `backend`, Build Command `go build -tags netgo -ldflags '-s -w' -o app ./cmd/api`, Start Command `./app`. Health Check Path: `/health`. В `ALLOWED_ORIGINS` впишите адрес Vercel. Тот же контракт лежит в `render.yaml`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
+
+**Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). В переменных окружения задайте `NEXT_PUBLIC_API_URL`, например `https://qaztil.onrender.com/api/v1`.
+
+Чтобы чужой коммит не пересобирал сервис: на Render в Build Filters включите путь `backend/**`, на Vercel в Ignored Build Step — `git diff HEAD^ HEAD --quiet -- frontend`.
 
 ## Docker
 
-Образ в корне собирает только API из `backend/`.
-## Docker
-
-Образ собирает API и страницу из `frontend/`, запускает процесс не от root и проверяет готовность через `GET /health`.
+Образ собирается только из `backend/` и не включает страницу. Процесс идёт не от root, готовность проверяется через `GET /health`.
 
 ```bash
 docker compose up --build
@@ -70,8 +73,6 @@ docker compose ps
 ```
 
 Контейнер готов, когда статус `healthy`. Swagger: `http://localhost:8080/swagger/index.html`.
-
-На Render используйте `render.yaml`: среда Docker, проверка `/health` и диск `/app/data` для SQLite. Диск доступен на платном инстансе. На бесплатном плане уберите блок `disk`, тогда база будет жить только до следующего деплоя.
 
 ## Проверки
 

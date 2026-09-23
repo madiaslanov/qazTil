@@ -83,9 +83,12 @@ func NewHandler(api *API, ready func(context.Context) error, webDir string) http
 
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
 
-	files := http.FileServer(http.Dir(webDir))
+	var files http.Handler
+	if webDir != "" {
+		files = http.FileServer(http.Dir(webDir))
+	}
 	r.NotFound(func(w http.ResponseWriter, req *http.Request) {
-		if strings.HasPrefix(req.URL.Path, "/api/") {
+		if files == nil || strings.HasPrefix(req.URL.Path, "/api/") {
 			writeJSON(w, http.StatusNotFound, ErrorResponse{Error: "не найдено"})
 			return
 		}

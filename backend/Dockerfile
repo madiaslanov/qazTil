@@ -1,10 +1,10 @@
 FROM golang:1.23-alpine AS build
 
 WORKDIR /src
-COPY backend/go.mod backend/go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
-COPY backend/cmd ./cmd
-COPY backend/internal ./internal
+COPY cmd ./cmd
+COPY internal ./internal
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/qaztil ./cmd/api
 
 FROM alpine:3.21
@@ -15,12 +15,10 @@ RUN apk add --no-cache ca-certificates su-exec \
 	&& mkdir -p /app/data
 WORKDIR /app
 COPY --from=build /out/qaztil /app/qaztil
-COPY frontend /app/frontend
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod 755 /entrypoint.sh /app/frontend
+RUN chmod 755 /entrypoint.sh
 
 ENV DB_PATH=/app/data/qaztil.db
-ENV WEB_DIR=/app/frontend
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
