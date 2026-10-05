@@ -21,6 +21,8 @@ type API struct {
 	words      *usecase.WordService
 	quizzes    *usecase.QuizService
 	progress   *usecase.ProgressService
+	situations *usecase.SituationService
+	course     *usecase.CourseService
 	webDir     string
 	origins    []string
 }
@@ -30,6 +32,8 @@ func NewAPI(
 	words *usecase.WordService,
 	quizzes *usecase.QuizService,
 	progress *usecase.ProgressService,
+	situations *usecase.SituationService,
+	course *usecase.CourseService,
 	webDir string,
 	origins []string,
 ) *API {
@@ -38,6 +42,8 @@ func NewAPI(
 		words:      words,
 		quizzes:    quizzes,
 		progress:   progress,
+		situations: situations,
+		course:     course,
 		webDir:     webDir,
 		origins:    origins,
 	}
@@ -79,6 +85,17 @@ func NewHandler(api *API, ready func(context.Context) error, webDir string) http
 		r.Post("/quizzes/{id}/answers", api.AnswerQuiz)
 
 		r.Get("/progress", api.ListProgress)
+
+		r.Get("/situations", api.ListSituations)
+		r.Get("/situations/{id}", api.GetSituation)
+		r.Get("/situations/{id}/words", api.ListSituationWords)
+
+		r.Get("/units", api.ListUnits)
+		r.Get("/units/{id}", api.GetUnit)
+		r.Get("/units/{id}/lessons", api.ListLessons)
+		r.Get("/lessons/{id}", api.GetLesson)
+		r.Get("/lessons/{id}/exercises", api.ListExercises)
+		r.Post("/exercises/{id}/answers", api.AnswerExercise)
 	})
 
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))

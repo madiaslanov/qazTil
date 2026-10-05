@@ -1,6 +1,6 @@
 # qazTil
 
-Базовое приложение для изучения казахского языка. Словарь, категории, квиз и прогресс одного локального ученика. Авторизации нет.
+Базовое приложение для изучения казахского языка. Словарь, категории, ситуативные слова, юниты с уроками и упражнениями, квиз и прогресс одного локального ученика. Авторизации нет.
 
 Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и SQLite, `main.go` собирает их вместе. Клиент — в `frontend/`: Next.js (App Router) по архитектуре Feature-Sliced Design.
 
@@ -41,6 +41,12 @@ cd frontend && npm install && npm run dev
 - `POST /quizzes/{id}/answers` — тело `{"question_id": 1, "selected_index": 0}`
 - `GET /quizzes/{id}` — счёт
 - `GET /progress` — ответы по каждой категории
+- `GET /situations`, `GET /situations/{id}` — ситуация и её слова, отдельно `GET /situations/{id}/words`
+- `GET /units`, `GET /units/{id}` — юнит и его уроки, отдельно `GET /units/{id}/lessons`
+- `GET /lessons/{id}` — урок и упражнения без правильного ответа, отдельно `GET /lessons/{id}/exercises`
+- `POST /exercises/{id}/answers` — тело `{"answer": "Рақмет"}`, в ответе `correct` и ожидаемая строка
+
+Юнит привязан к ситуации: сначала выбирают ситуацию и её слова, затем проходят уроки этого юнита. Стартовый набор (кафе, магазин, дорога) кладётся при пустой таблице `situations`, в том числе командой `make seed`.
 
 ## Фронтенд
 

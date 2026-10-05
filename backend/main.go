@@ -18,7 +18,7 @@ import (
 
 // @title qazTil API
 // @version 1.0
-// @description API для изучения казахского языка: категории, словарь, квиз и прогресс.
+// @description API для изучения казахского языка: категории, словарь, ситуации, юниты, уроки, упражнения, квиз и прогресс.
 // @host localhost:8080
 // @BasePath /api/v1
 // @schemes http
@@ -47,17 +47,28 @@ func main() {
 	if seeded {
 		log.Print("seeded starter vocabulary")
 	}
+	courseSeeded, err := sqlite.SeedCourse(ctx, db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if courseSeeded {
+		log.Print("seeded situations, units, lessons and exercises")
+	}
 
 	categories := sqlite.NewCategoryRepo(db)
 	words := sqlite.NewWordRepo(db)
 	quizzes := sqlite.NewQuizRepo(db)
 	progress := sqlite.NewProgressRepo(db)
+	situations := sqlite.NewSituationRepo(db)
+	course := sqlite.NewCourseRepo(db)
 
 	api := httpapi.NewAPI(
 		usecase.NewCategoryService(categories),
 		usecase.NewWordService(categories, words),
 		usecase.NewQuizService(categories, words, quizzes, progress),
 		usecase.NewProgressService(categories, progress),
+		usecase.NewSituationService(situations),
+		usecase.NewCourseService(course),
 		cfg.webDir,
 		cfg.origins,
 	)
