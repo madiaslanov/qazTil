@@ -1,4 +1,4 @@
-.PHONY: run test build swagger fmt docker
+.PHONY: run test build swagger fmt docker seed
 
 APP := backend/bin/qaztil
 SWAG := github.com/swaggo/swag/cmd/swag@v1.16.4
@@ -21,3 +21,6 @@ swagger:
 
 docker:
 	docker compose up --build
+
+seed:
+	cd backend && go run ./cmd/seed
