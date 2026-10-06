@@ -34,6 +34,12 @@ func writeErr(w http.ResponseWriter, err error) {
 		status, message = http.StatusBadRequest, "в категории меньше четырёх разных слов"
 	case errors.Is(err, domain.ErrAlreadyAnswered):
 		status, message = http.StatusConflict, "на вопрос уже ответили"
+	case errors.Is(err, domain.ErrEmailTaken):
+		status, message = http.StatusConflict, "почта уже занята"
+	case errors.Is(err, domain.ErrBadCredentials):
+		status, message = http.StatusUnauthorized, "неверная почта или пароль"
+	case errors.Is(err, domain.ErrUnauthorized):
+		status, message = http.StatusUnauthorized, "нужна авторизация"
 	default:
 		log.Printf("api error: %v", err)
 	}
