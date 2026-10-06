@@ -23,6 +23,13 @@ type WordRepository interface {
 	Delete(ctx context.Context, id int64) error
 }
 
+// UserRepository stores registered learners.
+type UserRepository interface {
+	Create(ctx context.Context, user User) (User, error)
+	GetByEmail(ctx context.Context, email string) (User, error)
+	GetByID(ctx context.Context, id int64) (User, error)
+}
+
 // QuizRepository stores practice sessions.
 type QuizRepository interface {
 	Create(ctx context.Context, quiz Quiz) (Quiz, error)
