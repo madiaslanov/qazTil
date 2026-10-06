@@ -3,8 +3,9 @@
 APP := backend/bin/qaztil
 SWAG := github.com/swaggo/swag/cmd/swag@v1.16.4
 
+# JWT_SECRET is required. The fallback is for local runs only; Render generates its own.
 run:
-	cd backend && go run .
+	cd backend && JWT_SECRET=$${JWT_SECRET:-dev-secret-change-me-0123456789abcdef} go run .
 
 test:
 	cd backend && go test ./...
