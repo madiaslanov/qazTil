@@ -2,37 +2,92 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 
 import { useLearnerStore, type DailyGoal } from "@/entities/learner";
+import { sessionApi, useSessionStore } from "@/entities/session";
+import { ApiError } from "@/shared/api";
 import { Button, Input, Label } from "@/shared/ui";
 
 import { GoalPicker } from "./goal-picker";
 
+type Mode = "register" | "login";
+
+const MIN_PASSWORD = 8;
+/** bcrypt на сервере режет всё после 72 байт, Go такой пароль не примет. */
+const MAX_PASSWORD_BYTES = 72;
+
+function passwordError(password: string): string | null {
+  if (password.length < MIN_PASSWORD) {
+    return `пароль — минимум ${MIN_PASSWORD} символов`;
+  }
+  if (new TextEncoder().encode(password).length > MAX_PASSWORD_BYTES) {
+    return "пароль слишком длинный";
+  }
+  return null;
+}
+
 /**
- * Вход из макета. Авторизации в API нет, поэтому пароль никуда не уходит,
- * а почта и цель просто заводят локальный профиль ученика.
+ * Вход из макета: регистрация с дневной целью или вход в существующий аккаунт.
+ * Имя не спрашиваем — Go возьмёт его из почты.
  */
 export function OnboardingForm() {
   const router = useRouter();
+  const learner = useLearnerStore((state) => state.learner);
   const createLearner = useLearnerStore((state) => state.create);
+  const setSession = useSessionStore((state) => state.setSession);
+  const [mode, setMode] = useState<Mode>("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [goal, setGoal] = useState<DailyGoal>(10);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  function start(event: React.FormEvent) {
+  const auth = useMutation({
+    mutationFn: () => {
+      const credentials = { email: email.trim(), password };
+      return mode === "register"
+        ? sessionApi.register({ ...credentials, display_name: "" })
+        : sessionApi.login(credentials);
+    },
+    onSuccess: (session) => {
+      setSession(session);
+      // Геймификация пока живёт в браузере: заводим профиль под этот аккаунт,
+      // а прогресс того же ученика на этом устройстве не трогаем.
+      if (mode === "register" || learner?.email !== session.user.email) {
+        createLearner(session.user.email, goal);
+      }
+      router.push("/learn");
+    },
+  });
+
+  function submit(event: React.FormEvent) {
     event.preventDefault();
-    createLearner(email.trim() || "ученик", goal);
-    router.push("/learn");
+    const error = passwordError(password);
+    setLocalError(error);
+    if (!error) auth.mutate();
   }
 
+  function switchMode() {
+    setMode(mode === "register" ? "login" : "register");
+    setLocalError(null);
+    auth.reset();
+  }
+
+  const error =
+    localError ??
+    (auth.error instanceof ApiError
+      ? auth.error.message
+      : auth.error && "ошибка запроса");
+
   return (
-    <form onSubmit={start} className="flex flex-1 flex-col gap-6.5">
+    <form onSubmit={submit} className="flex flex-1 flex-col gap-6.5">
       <div className="flex flex-col gap-3.5">
         <div className="flex flex-col gap-[7px]">
           <Label htmlFor="email">Почта</Label>
           <Input
             id="email"
             type="email"
+            required
             autoComplete="email"
             placeholder="you@example.com"
             value={email}
@@ -44,20 +99,43 @@ export function OnboardingForm() {
           <Input
             id="password"
             type="password"
-            autoComplete="new-password"
+            required
+            autoComplete={
+              mode === "register" ? "new-password" : "current-password"
+            }
             placeholder="••••••••"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "auth-error" : undefined}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
         </div>
+        {error && (
+          <p
+            id="auth-error"
+            role="alert"
+            className="text-[13px] font-bold text-orange"
+          >
+            {error}
+          </p>
+        )}
       </div>
 
-      <GoalPicker value={goal} onChange={setGoal} />
+      {mode === "register" && <GoalPicker value={goal} onChange={setGoal} />}
 
-      <div className="mt-auto pt-6">
-        <Button type="submit" variant="primary">
-          Начать обучение
+      <div className="mt-auto flex flex-col gap-3 pt-6">
+        <Button type="submit" variant="primary" disabled={auth.isPending}>
+          {mode === "register" ? "Начать обучение" : "Войти"}
         </Button>
+        <button
+          type="button"
+          onClick={switchMode}
+          className="text-[14px] font-bold text-muted underline underline-offset-4"
+        >
+          {mode === "register"
+            ? "Уже есть аккаунт? Войти"
+            : "Нет аккаунта? Зарегистрироваться"}
+        </button>
       </div>
     </form>
   );
