@@ -11,6 +11,8 @@ services:
         value: /var/data/qaztil.db
       - key: ALLOWED_ORIGINS
         value: https://qaz-til.vercel.app,http://localhost:3000
+      - key: JWT_SECRET
+        generateValue: true
     disk:
       name: qaztil-data
       mountPath: /var/data

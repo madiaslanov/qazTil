@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	httpapi "github.com/madiaslanov/qazTil/internal/adapter/http"
+	"github.com/madiaslanov/qazTil/internal/adapter/security"
 	"github.com/madiaslanov/qazTil/internal/adapter/sqlite"
 	"github.com/madiaslanov/qazTil/internal/usecase"
 )
@@ -22,8 +24,15 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1
 // @schemes http
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Токен из /auth/login в виде "Bearer <token>"
 func main() {
 	cfg := loadConfig()
+	if len(cfg.jwtSecret) < minSecretLen {
+		log.Fatalf("JWT_SECRET must be at least %d characters", minSecretLen)
+	}
 	if cfg.webDir != "" {
 		if _, err := os.Stat(cfg.webDir); err != nil {
 			log.Fatalf("web dir: %v", err)
@@ -61,6 +70,10 @@ func main() {
 	progress := sqlite.NewProgressRepo(db)
 	situations := sqlite.NewSituationRepo(db)
 	course := sqlite.NewCourseRepo(db)
+	users := sqlite.NewUserRepo(db)
+
+	tokens := security.NewJWTIssuer(cfg.jwtSecret, cfg.jwtTTL)
+	hasher := security.NewBcryptHasher(cfg.bcryptCost)
 
 	api := httpapi.NewAPI(
 		usecase.NewCategoryService(categories),
@@ -69,6 +82,8 @@ func main() {
 		usecase.NewProgressService(categories, progress),
 		usecase.NewSituationService(situations),
 		usecase.NewCourseService(course),
+		usecase.NewAuthService(users, hasher, tokens),
+		tokens,
 		cfg.webDir,
 		cfg.origins,
 	)
@@ -106,20 +121,55 @@ func main() {
 	}
 }
 
+// minSecretLen keeps a throwaway JWT_SECRET out of a deployed service.
+const minSecretLen = 32
+
 type config struct {
-	addr    string
-	dbPath  string
-	webDir  string
-	origins []string
+	addr       string
+	dbPath     string
+	webDir     string
+	origins    []string
+	jwtSecret  string
+	jwtTTL     time.Duration
+	bcryptCost int
 }
 
 func loadConfig() config {
 	return config{
-		addr:    listenAddr(),
-		dbPath:  env("DB_PATH", "data/qaztil.db"),
-		webDir:  env("WEB_DIR", ""),
-		origins: allowedOrigins(),
+		addr:       listenAddr(),
+		dbPath:     env("DB_PATH", "data/qaztil.db"),
+		webDir:     env("WEB_DIR", ""),
+		origins:    allowedOrigins(),
+		jwtSecret:  os.Getenv("JWT_SECRET"),
+		jwtTTL:     durationEnv("JWT_TTL", security.DefaultTokenTTL),
+		bcryptCost: intEnv("BCRYPT_COST", 0),
 	}
+}
+
+func intEnv(key string, fallback int) int {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		log.Printf("ignoring %s=%q: not a number", key, raw)
+		return fallback
+	}
+	return value
+}
+
+func durationEnv(key string, fallback time.Duration) time.Duration {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	value, err := time.ParseDuration(raw)
+	if err != nil || value <= 0 {
+		log.Printf("ignoring %s=%q: not a positive duration", key, raw)
+		return fallback
+	}
+	return value
 }
 
 // allowedOrigins задаётся через ALLOWED_ORIGINS списком через запятую.

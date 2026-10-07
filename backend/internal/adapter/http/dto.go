@@ -156,3 +156,27 @@ type ProgressResponse struct {
 	CorrectAnswers int        `json:"correct_answers" example:"3"`
 	LastStudiedAt  *time.Time `json:"last_studied_at,omitempty"`
 } // @name ProgressResponse
+
+type RegisterRequest struct {
+	Email       string `json:"email" example:"aidana@example.com"`
+	Password    string `json:"password" example:"qazaqtili2026"`
+	DisplayName string `json:"display_name" example:"Айдана"`
+} // @name RegisterRequest
+
+type LoginRequest struct {
+	Email    string `json:"email" example:"aidana@example.com"`
+	Password string `json:"password" example:"qazaqtili2026"`
+} // @name LoginRequest
+
+type UserResponse struct {
+	ID          int64     `json:"id" example:"1"`
+	Email       string    `json:"email" example:"aidana@example.com"`
+	DisplayName string    `json:"display_name" example:"Айдана"`
+	CreatedAt   time.Time `json:"created_at"`
+} // @name UserResponse
+
+type SessionResponse struct {
+	Token     string       `json:"token" example:"eyJhbGciOiJIUzI1NiJ9..."`
+	ExpiresAt time.Time    `json:"expires_at"`
+	User      UserResponse `json:"user"`
+} // @name SessionResponse

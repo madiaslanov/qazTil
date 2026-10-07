@@ -12,6 +12,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	_ "github.com/madiaslanov/qazTil/internal/adapter/http/docs"
+	"github.com/madiaslanov/qazTil/internal/domain"
 	"github.com/madiaslanov/qazTil/internal/usecase"
 )
 
@@ -23,6 +24,8 @@ type API struct {
 	progress   *usecase.ProgressService
 	situations *usecase.SituationService
 	course     *usecase.CourseService
+	auth       *usecase.AuthService
+	tokens     domain.TokenIssuer
 	webDir     string
 	origins    []string
 }
@@ -34,6 +37,8 @@ func NewAPI(
 	progress *usecase.ProgressService,
 	situations *usecase.SituationService,
 	course *usecase.CourseService,
+	auth *usecase.AuthService,
+	tokens domain.TokenIssuer,
 	webDir string,
 	origins []string,
 ) *API {
@@ -44,6 +49,8 @@ func NewAPI(
 		progress:   progress,
 		situations: situations,
 		course:     course,
+		auth:       auth,
+		tokens:     tokens,
 		webDir:     webDir,
 		origins:    origins,
 	}
@@ -60,7 +67,7 @@ func NewHandler(api *API, ready func(context.Context) error, webDir string) http
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   api.origins,
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
-		AllowedHeaders:   []string{"Accept", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
@@ -68,6 +75,12 @@ func NewHandler(api *API, ready func(context.Context) error, webDir string) http
 	r.Get("/health", healthHandler(ready))
 
 	r.Route("/api/v1", func(r chi.Router) {
+		r.Route("/auth", func(r chi.Router) {
+			r.Post("/register", api.Register)
+			r.Post("/login", api.Login)
+			r.With(api.RequireUser).Get("/me", api.Me)
+		})
+
 		r.Get("/categories", api.ListCategories)
 		r.Post("/categories", api.CreateCategory)
 		r.Get("/categories/{id}", api.GetCategory)
