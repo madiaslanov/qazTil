@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { BookOpen, Flame, Heart, Target } from "lucide-react";
 
 import { useLearnerStore, type DailyGoal } from "@/entities/learner";
+import { useSessionStore } from "@/entities/session";
+import { useSignOut } from "@/features/auth";
 import { SWAGGER_URL } from "@/shared/config/env";
 import { cn } from "@/shared/lib/cn";
 import { Button, Card, IconBadge, Screen } from "@/shared/ui";
@@ -13,17 +14,12 @@ import { TopBar } from "@/widgets/top-bar";
 
 const goals: DailyGoal[] = [5, 10, 15];
 
-/** Профиль ученика: локальные счётчики и настройки цели. */
+/** Профиль ученика: аккаунт из API, локальные счётчики и настройки цели. */
 export function ProfilePage() {
-  const router = useRouter();
+  const user = useSessionStore((state) => state.session?.user);
   const learner = useLearnerStore((state) => state.learner);
   const setDailyGoal = useLearnerStore((state) => state.setDailyGoal);
-  const reset = useLearnerStore((state) => state.reset);
-
-  function signOut() {
-    reset();
-    router.replace("/");
-  }
+  const signOut = useSignOut();
 
   return (
     <Screen>
@@ -34,7 +30,8 @@ export function ProfilePage() {
           <p className="text-[12px] font-extrabold uppercase text-muted">
             Профиль
           </p>
-          <h1 className="mt-1 text-[26px]">{learner?.email ?? "Гость"}</h1>
+          <h1 className="mt-1 text-[26px]">{user?.display_name}</h1>
+          <p className="mt-0.5 text-[14px] text-subtle">{user?.email}</p>
         </div>
 
         <Card className="flex flex-col gap-4.5 p-5">
@@ -92,7 +89,7 @@ export function ProfilePage() {
         </Button>
 
         <Button variant="ghost" size="md" onClick={signOut} className="w-full">
-          Сбросить профиль
+          Выйти
         </Button>
 
         <a

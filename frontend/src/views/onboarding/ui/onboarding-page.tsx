@@ -4,22 +4,22 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { useLearnerStore } from "@/entities/learner";
+import { useSessionStore } from "@/entities/session";
 import { OnboardingForm } from "@/features/onboarding";
 import { Screen } from "@/shared/ui";
 
 /** Первый экран: приветствие, поля входа и выбор дневной цели. */
 export function OnboardingPage() {
   const router = useRouter();
-  const learner = useLearnerStore((state) => state.learner);
-  const hydrated = useLearnerStore((state) => state.hydrated);
+  const session = useSessionStore((state) => state.session);
+  const hydrated = useSessionStore((state) => state.hydrated);
 
   useEffect(() => {
-    if (learner) router.replace("/learn");
-  }, [learner, router]);
+    if (session) router.replace("/learn");
+  }, [session, router]);
 
-  // Пока persist не поднялся, не мигаем формой тому, кто уже учится.
-  if (!hydrated || learner) {
+  // Пока persist не поднялся, не мигаем формой тому, кто уже вошёл.
+  if (!hydrated || session) {
     return <Screen />;
   }
 
