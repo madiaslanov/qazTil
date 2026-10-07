@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useLearnerStore } from "@/entities/learner";
+import { getSessionToken, useSessionStore } from "@/entities/session";
+import { configureAuth } from "@/shared/api";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -30,12 +32,22 @@ function getQueryClient() {
   return browserQueryClient;
 }
 
+// Подключаем до первого рендера: дочерние запросы стартуют раньше эффектов провайдера.
+configureAuth({
+  getToken: getSessionToken,
+  onUnauthorized: () => {
+    useSessionStore.getState().clear();
+    getQueryClient().removeQueries({ queryKey: ["session"] });
+  },
+});
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   // persist поднимаем вручную, чтобы разметка сервера и клиента совпадала.
   useEffect(() => {
     void useLearnerStore.persist.rehydrate();
+    void useSessionStore.persist.rehydrate();
   }, []);
 
   return (
