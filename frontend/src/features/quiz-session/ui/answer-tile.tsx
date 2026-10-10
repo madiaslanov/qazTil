@@ -19,18 +19,27 @@ function toneOf({
   return "idle";
 }
 
-/** Вариант ответа: буква в квадрате плюс текст, цвет зависит от проверки. */
+const tones: Record<Tone, string> = {
+  idle: "border-line bg-surface hover:border-primary/30",
+  selected: "border-transparent bg-highlight-soft",
+  correct: "border-transparent bg-success-soft",
+  wrong: "border-transparent bg-danger-soft",
+};
+
+/** Вариант ответа: буква в плашке и текст. Цвет — по результату проверки. */
 export function AnswerTile({
   index,
   option,
   selected,
   correctIndex,
+  disabled,
   onSelect,
 }: {
   index: number;
   option: string;
   selected: number | null;
   correctIndex: number | null;
+  disabled: boolean;
   onSelect: (index: number) => void;
 }) {
   const tone = toneOf({ index, selected, correctIndex });
@@ -39,18 +48,14 @@ export function AnswerTile({
     <button
       type="button"
       onClick={() => onSelect(index)}
-      disabled={correctIndex !== null}
+      disabled={disabled}
       aria-pressed={selected === index}
       className={cn(
-        "flex h-19 w-full items-center gap-3.5 rounded-control border-3 border-primary px-4.5 text-left transition-[transform,box-shadow]",
-        tone === "idle" && "bg-surface",
-        tone === "selected" && "bg-accent shadow-button",
-        tone === "correct" && "bg-success shadow-button",
-        tone === "wrong" && "bg-danger shadow-button",
-        correctIndex === null && "active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
+        "flex h-answer w-full items-center gap-3 rounded-control border px-4 text-left transition-colors outline-none",
+        tones[tone],
       )}
     >
-      <span className="flex size-7.5 shrink-0 items-center justify-center rounded-option border-2 border-primary bg-background text-caption font-extrabold">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-option bg-line text-eyebrow font-extrabold text-foreground">
         {letters[index] ?? index + 1}
       </span>
       <span className="text-lead text-foreground">{option}</span>

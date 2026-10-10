@@ -13,6 +13,14 @@ function messageOf(cause: unknown, fallback: string) {
 }
 
 /**
+ * answering — выбираем вариант;
+ * feedback — показан разбор ответа;
+ * retrying — повтор после ошибки: сервер ответ уже засчитал,
+ * поэтому вторую попытку проверяем локально по известному ключу.
+ */
+type Phase = "answering" | "feedback" | "retrying";
+
+/**
  * Один проход урока: вопросы и счёт держит сервер,
  * хук отвечает за текущий вопрос и состояние проверки.
  */
@@ -27,6 +35,7 @@ export function useQuizSession(categoryId: number, size: number) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
+  const [phase, setPhase] = useState<Phase>("answering");
   const [finished, setFinished] = useState(false);
 
   const quiz = session.data ?? null;
@@ -43,6 +52,7 @@ export function useQuizSession(categoryId: number, size: number) {
     onSuccess: (result) => {
       queryClient.setQueryData(options.queryKey, result.quiz);
       setCorrectIndex(result.correct_index);
+      setPhase("feedback");
       if (!result.correct) loseLife();
     },
   });
@@ -51,14 +61,24 @@ export function useQuizSession(categoryId: number, size: number) {
   const total = quiz?.questions.length ?? 0;
 
   const check = useCallback(() => {
-    if (!question || selected === null || correctIndex !== null) return;
+    if (!question || selected === null || phase === "feedback") return;
+    if (phase === "retrying") {
+      setPhase("feedback");
+      return;
+    }
     answer.mutate({ questionId: question.id, selectedIndex: selected });
-  }, [answer, correctIndex, question, selected]);
+  }, [answer, phase, question, selected]);
+
+  const retry = useCallback(() => {
+    setSelected(null);
+    setPhase("retrying");
+  }, []);
 
   const next = useCallback(() => {
     if (!quiz) return;
     setSelected(null);
     setCorrectIndex(null);
+    setPhase("answering");
 
     if (index + 1 >= quiz.questions.length) {
       completeLesson(quiz.category_id, quiz.score.correct);
@@ -79,6 +99,8 @@ export function useQuizSession(categoryId: number, size: number) {
         ? "failed"
         : "running";
 
+  const checked = phase === "feedback";
+
   return {
     status,
     error: session.isError
@@ -91,11 +113,16 @@ export function useQuizSession(categoryId: number, size: number) {
     index,
     total,
     selected,
-    correctIndex,
-    checked: correctIndex !== null,
+    /** Правильный вариант известен только после проверки. */
+    correctIndex: checked ? correctIndex : null,
+    checked,
+    /** Верен ли последний проверенный ответ. */
+    correct: checked ? selected === correctIndex : null,
     checking: answer.isPending,
+    isLast: index + 1 >= total,
     select: setSelected,
     check,
+    retry,
     next,
     /** Доля пройденных вопросов для полосы прогресса. */
     percent: total === 0 ? 0 : Math.round((index / total) * 100),

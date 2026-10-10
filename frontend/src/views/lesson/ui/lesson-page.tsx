@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { useLearnerStore, useLives } from "@/entities/learner";
@@ -38,21 +37,12 @@ export function LessonPage({ categoryId }: { categoryId: number }) {
   }
 
   return (
-    <Screen>
-      <Image
-        src="/bg/lesson.png"
-        alt=""
-        fill
-        sizes="430px"
-        className="pointer-events-none object-cover mix-blend-color-burn"
+    <Screen className="h-dvh bg-surface-muted">
+      <QuizSession
+        categoryId={categoryId}
+        size={questionsFor(dailyGoal)}
+        onFinished={onFinished}
       />
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        <QuizSession
-          categoryId={categoryId}
-          size={questionsFor(dailyGoal)}
-          onFinished={onFinished}
-        />
-      </div>
     </Screen>
   );
 }
