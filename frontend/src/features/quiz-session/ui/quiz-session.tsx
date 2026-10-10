@@ -38,7 +38,7 @@ export function QuizSession({
       <StateNote
         text={session.error ?? "урок не собрался"}
         action={
-          <Button asChild size="md" variant="quiet" className="w-auto">
+          <Button asChild size="md" variant="secondary" className="w-auto">
             <Link href="/learn">Вернуться к пути</Link>
           </Button>
         }
@@ -93,7 +93,7 @@ export function QuizSession({
           </Button>
         ) : (
           <Button
-            variant="success"
+            variant="primary"
             onClick={session.check}
             disabled={session.selected === null || session.checking}
           >

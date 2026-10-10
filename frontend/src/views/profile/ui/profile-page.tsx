@@ -81,7 +81,7 @@ export function ProfilePage() {
           </div>
         </Card>
 
-        <Button asChild variant="quiet">
+        <Button asChild variant="secondary">
           <Link href="/words">
             <BookOpen className="size-5" strokeWidth={2.2} />
             Словарь

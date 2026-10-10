@@ -45,7 +45,7 @@ export function DashboardPage() {
                 action={
                   <Button
                     size="md"
-                    variant="quiet"
+                    variant="secondary"
                     className="w-auto"
                     onClick={() => categories.refetch()}
                   >

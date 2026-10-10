@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLearnerStore, type DailyGoal } from "@/entities/learner";
 import { sessionApi, useSessionStore } from "@/entities/session";
 import { ApiError } from "@/shared/api";
-import { Button, Input, Label } from "@/shared/ui";
+import { Button, FieldHint, Input, Label } from "@/shared/ui";
 
 import { GoalPicker } from "./goal-picker";
 
@@ -104,20 +104,16 @@ export function OnboardingForm() {
               mode === "register" ? "new-password" : "current-password"
             }
             placeholder="••••••••"
-            aria-invalid={Boolean(error)}
+            status={error ? "error" : "default"}
             aria-describedby={error ? "auth-error" : undefined}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
         </div>
         {error && (
-          <p
-            id="auth-error"
-            role="alert"
-            className="text-caption font-bold text-accent"
-          >
+          <FieldHint id="auth-error" tone="error">
             {error}
-          </p>
+          </FieldHint>
         )}
       </div>
 

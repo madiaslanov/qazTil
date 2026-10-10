@@ -30,7 +30,7 @@ export function ProgressPage() {
             action={
               <Button
                 size="md"
-                variant="quiet"
+                variant="secondary"
                 className="w-auto"
                 onClick={() => progress.refetch()}
               >
@@ -60,7 +60,7 @@ export function ProgressPage() {
                 </div>
                 <b className="text-stat font-extrabold">{percent}%</b>
               </div>
-              <Progress value={percent} />
+              <Progress value={percent} tone="highlight" />
               <p className="text-caption text-muted">
                 Верно {item.correct_answers} из {item.total_answers}
               </p>

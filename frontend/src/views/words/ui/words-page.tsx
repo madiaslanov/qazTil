@@ -50,7 +50,7 @@ export function WordsPage() {
             action={
               <Button
                 size="md"
-                variant="quiet"
+                variant="secondary"
                 className="w-auto"
                 onClick={() => words.refetch()}
               >
