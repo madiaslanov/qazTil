@@ -2,25 +2,49 @@
 
 import { Flame, Heart } from "lucide-react";
 
-import { useLearnerStore } from "@/entities/learner";
+import { useLearnerStore, useLives } from "@/entities/learner";
+import { Logo } from "@/shared/ui";
 
-/** Шапка макета: логотип слева, страйк и жизни справа. */
+/** Шапка вкладок: логотип слева, страйк и жизни справа. */
 export function TopBar() {
   const learner = useLearnerStore((state) => state.learner);
+  const { lives } = useLives();
 
   return (
-    <header className="flex h-[82px] shrink-0 items-center justify-between border-b-[3px] border-ink px-6">
-      <p className="text-[23px] text-ink">QazTil</p>
+    <header className="flex h-bar shrink-0 items-center justify-between bg-surface px-gutter">
+      <Logo />
       <div className="flex items-center gap-4">
-        <span className="flex items-center gap-1.5">
-          <Flame className="size-[22px] text-orange" strokeWidth={2.2} />
-          <b className="text-[15px] font-extrabold">{learner?.streak ?? 0}</b>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Heart className="size-[22px] text-[#e05a5a]" strokeWidth={2.2} />
-          <b className="text-[15px] font-extrabold">{learner?.lives ?? 0}</b>
-        </span>
+        <Counter
+          label="Дней подряд"
+          value={learner?.streak ?? 0}
+          icon={<Flame className="size-5.5 text-streak" />}
+        />
+        <Counter
+          label="Жизни"
+          value={lives}
+          icon={<Heart className="size-5.5 text-lives" />}
+        />
       </div>
     </header>
+  );
+}
+
+function Counter({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+}) {
+  return (
+    <span className="flex items-center gap-1.5" title={label}>
+      {icon}
+      <b className="text-body font-extrabold text-foreground">
+        <span className="sr-only">{label}: </span>
+        {value}
+      </b>
+    </span>
   );
 }

@@ -19,18 +19,27 @@ function toneOf({
   return "idle";
 }
 
-/** Вариант ответа: буква в квадрате плюс текст, цвет зависит от проверки. */
+const tones: Record<Tone, string> = {
+  idle: "border-line bg-surface hover:border-primary/30",
+  selected: "border-transparent bg-highlight-soft",
+  correct: "border-transparent bg-success-soft",
+  wrong: "border-transparent bg-danger-soft",
+};
+
+/** Вариант ответа: буква в плашке и текст. Цвет — по результату проверки. */
 export function AnswerTile({
   index,
   option,
   selected,
   correctIndex,
+  disabled,
   onSelect,
 }: {
   index: number;
   option: string;
   selected: number | null;
   correctIndex: number | null;
+  disabled: boolean;
   onSelect: (index: number) => void;
 }) {
   const tone = toneOf({ index, selected, correctIndex });
@@ -39,21 +48,17 @@ export function AnswerTile({
     <button
       type="button"
       onClick={() => onSelect(index)}
-      disabled={correctIndex !== null}
+      disabled={disabled}
       aria-pressed={selected === index}
       className={cn(
-        "flex h-[76px] w-full items-center gap-3.5 rounded-tile border-[3px] border-ink px-[18px] text-left transition-[transform,box-shadow]",
-        tone === "idle" && "bg-card",
-        tone === "selected" && "bg-orange shadow-hard-sm",
-        tone === "correct" && "bg-green shadow-hard-sm",
-        tone === "wrong" && "bg-[#e8705f] shadow-hard-sm",
-        correctIndex === null && "active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        "flex h-answer w-full items-center gap-3 rounded-control border px-4 text-left transition-colors outline-none",
+        tones[tone],
       )}
     >
-      <span className="flex size-[30px] shrink-0 items-center justify-center rounded-field border-2 border-ink bg-paper text-[13px] font-extrabold">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-option bg-line text-eyebrow font-extrabold text-foreground">
         {letters[index] ?? index + 1}
       </span>
-      <span className="text-[17px] text-ink">{option}</span>
+      <span className="text-lead text-foreground">{option}</span>
     </button>
   );
 }

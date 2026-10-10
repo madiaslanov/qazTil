@@ -1,1 +1,1 @@
-export { QuizSession } from "./ui/quiz-session";
+export { QuizSession, type LessonScore } from "./ui/quiz-session";

@@ -1,2 +1,1 @@
-export { SkillTree } from "./ui/skill-tree";
-export { SkillNode } from "./ui/skill-node";
+export { LESSONS_PER_MODULE, SkillTree } from "./ui/skill-tree";

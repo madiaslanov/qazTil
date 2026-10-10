@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { useLearnerStore } from "@/entities/learner";
-import { QuizSession } from "@/features/quiz-session";
-import type { Quiz } from "@/entities/quiz";
+import { useLearnerStore, useLives } from "@/entities/learner";
+import { QuizSession, type LessonScore } from "@/features/quiz-session";
 import { Screen } from "@/shared/ui";
 
 import { LessonResult } from "./lesson-result";
@@ -16,30 +15,36 @@ function questionsFor(goalMinutes: number | undefined) {
 }
 
 export function LessonPage({ categoryId }: { categoryId: number }) {
+  const router = useRouter();
   const dailyGoal = useLearnerStore((state) => state.learner?.dailyGoal);
-  const [finished, setFinished] = useState<Quiz | null>(null);
-  const onFinished = useCallback((quiz: Quiz) => setFinished(quiz), []);
+  const { lives } = useLives();
+  const [finished, setFinished] = useState<LessonScore | null>(null);
+  const [started] = useState(() => lives > 0);
+  const onFinished = useCallback(
+    (score: LessonScore) => setFinished(score),
+    [],
+  );
+
+  // Без жизней урок не начинаем — на пути покажется «Жизни закончились».
+  useEffect(() => {
+    if (!started) router.replace("/learn");
+  }, [started, router]);
+
+  if (!started) {
+    return <Screen />;
+  }
 
   if (finished) {
-    return <LessonResult quiz={finished} />;
+    return <LessonResult score={finished} />;
   }
 
   return (
-    <Screen>
-      <Image
-        src="/bg/lesson.png"
-        alt=""
-        fill
-        sizes="430px"
-        className="pointer-events-none object-cover mix-blend-color-burn"
+    <Screen className="h-dvh bg-surface-muted">
+      <QuizSession
+        categoryId={categoryId}
+        size={questionsFor(dailyGoal)}
+        onFinished={onFinished}
       />
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        <QuizSession
-          categoryId={categoryId}
-          size={questionsFor(dailyGoal)}
-          onFinished={onFinished}
-        />
-      </div>
     </Screen>
   );
 }

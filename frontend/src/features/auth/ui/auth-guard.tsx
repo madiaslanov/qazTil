@@ -41,7 +41,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
     // Локальный профиль могли стереть отдельно от сессии — заводим заново.
     if (learner?.email !== session.user.email) {
-      createLearner(session.user.email, learner?.dailyGoal ?? 10);
+      createLearner(session.user.email, {
+        dailyGoal: learner?.dailyGoal ?? 10,
+        level: learner?.level,
+        motivation: learner?.motivation,
+      });
     }
   }, [hydrated, session, learner, createLearner, router]);
 

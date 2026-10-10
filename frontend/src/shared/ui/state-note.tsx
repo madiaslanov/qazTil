@@ -9,8 +9,8 @@ export function StateNote({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="text-[17px] text-muted">{text}</p>
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-gutter text-center">
+      <p className="text-body text-muted">{text}</p>
       {action}
     </div>
   );

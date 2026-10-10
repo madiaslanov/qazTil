@@ -1,9 +1,9 @@
 import type { DailyGoal } from "@/entities/learner";
-import { cn } from "@/shared/lib/cn";
+import { OptionCard } from "@/shared/ui";
 
 const goals: DailyGoal[] = [5, 10, 15];
 
-/** Выбор дневной цели: три карточки, активная — оранжевая. */
+/** Выбор дневной цели: три мятные плитки. */
 export function GoalPicker({
   value,
   onChange,
@@ -13,25 +13,20 @@ export function GoalPicker({
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-3 text-[18px] font-extrabold">
+      <legend className="mb-3 text-stat font-extrabold text-heading">
         Установи ежедневную цель
       </legend>
       <div className="flex gap-2.5">
         {goals.map((goal) => (
-          <button
+          <OptionCard
             key={goal}
-            type="button"
+            tone="soft"
+            selected={value === goal}
             onClick={() => onChange(goal)}
-            aria-pressed={value === goal}
-            className={cn(
-              "h-[72px] flex-1 rounded-field border-[3px] border-ink text-[15px] font-extrabold transition-[transform,box-shadow]",
-              value === goal
-                ? "bg-orange shadow-hard-sm"
-                : "bg-card active:translate-x-[2px] active:translate-y-[2px]",
-            )}
+            className="h-18 flex-1 text-body font-extrabold text-heading"
           >
             {goal} мин
-          </button>
+          </OptionCard>
         ))}
       </div>
     </fieldset>

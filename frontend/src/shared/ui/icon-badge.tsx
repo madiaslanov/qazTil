@@ -11,7 +11,7 @@ function IconBadge({
   return (
     <div
       className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-ink [&_svg]:size-5",
+        "flex size-11 shrink-0 items-center justify-center rounded-full text-primary-foreground [&_svg]:size-5",
         className,
       )}
       {...props}
