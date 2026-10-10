@@ -1,19 +1,16 @@
-"use client";
-
 import type { Category } from "@/entities/category";
 import { cn } from "@/shared/lib/cn";
 
 import { SkillNode, type SkillState } from "./skill-node";
 
-/** Смещения узлов по горизонтали, чтобы путь шёл змейкой, как в макете. */
+/** Сдвиг узлов от центра, чтобы путь шёл змейкой, как в макете. */
 const offsets = [
-  "justify-center",
-  "justify-start pl-18",
-  "justify-end pr-15.5",
-  "justify-center",
+  "-translate-x-9.5",
+  "translate-x-3.75",
+  "-translate-x-13.5",
+  "translate-x-11",
+  "translate-x-0",
 ] as const;
-
-const connectors = ["rotate-0", "-rotate-25", "rotate-24", "rotate-0"] as const;
 
 function stateOf(
   category: Category,
@@ -29,40 +26,26 @@ function stateOf(
 export function SkillTree({
   categories,
   completedIds,
+  onSelect,
 }: {
   categories: Category[];
   completedIds: number[];
+  onSelect: (category: Category, index: number) => void;
 }) {
   const current =
     categories.find((category) => !completedIds.includes(category.id)) ?? null;
 
   return (
-    <div className="flex flex-col items-stretch">
-      {categories.map((category, index) => {
-        const state = stateOf(category, completedIds, current?.id ?? null);
-        return (
-          <div key={category.id} className="flex flex-col items-center">
-            {index > 0 && (
-              <span
-                className={cn(
-                  "my-1 h-6 w-1 rounded-full",
-                  connectors[index % connectors.length],
-                  state === "locked" ? "bg-line" : "bg-primary",
-                )}
-              />
-            )}
-            <div
-              className={cn("flex w-full", offsets[index % offsets.length])}
-            >
-              <SkillNode
-                href={`/lesson/${category.id}`}
-                label={category.name_ru}
-                state={state}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <ol className="flex flex-col items-center gap-3">
+      {categories.map((category, index) => (
+        <li key={category.id} className={cn(offsets[index % offsets.length])}>
+          <SkillNode
+            label={category.name_ru}
+            state={stateOf(category, completedIds, current?.id ?? null)}
+            onSelect={() => onSelect(category, index)}
+          />
+        </li>
+      ))}
+    </ol>
   );
 }

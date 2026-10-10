@@ -153,4 +153,20 @@
   --spacing-field: 56px;
   --spacing-answer: 68px;
   --container-phone: 430px;
+
+  /* Движение */
+  --animate-sheet-in: sheet-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 200ms ease-out;
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
 }

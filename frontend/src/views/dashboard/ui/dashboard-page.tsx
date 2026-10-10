@@ -1,39 +1,43 @@
 "use client";
 
-import Image from "next/image";
-
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { categoryQueries } from "@/entities/category";
-import { useLearnerStore } from "@/entities/learner";
-import { Button, StateNote } from "@/shared/ui";
+import { categoryQueries, type Category } from "@/entities/category";
+import { useLearnerStore, type Level } from "@/entities/learner";
+import { Button, Eyebrow, StateNote } from "@/shared/ui";
+import { LessonPreview } from "@/widgets/lesson-preview";
 import { SkillTree } from "@/widgets/skill-tree";
+
+import { PathGlows } from "./path-glows";
+
+const levelTitles: Record<Level, string> = {
+  A0: "A0 · с нуля",
+  A1: "A1 · начальный",
+  A2: "A2 · элементарный",
+};
 
 /** Путь обучения: категории из API выстроены цепочкой уроков. */
 export function DashboardPage() {
-  const completedIds = useLearnerStore(
-    (state) => state.learner?.completedCategoryIds,
-  );
+  const learner = useLearnerStore((state) => state.learner);
   const categories = useQuery(categoryQueries.all());
+  const [preview, setPreview] = useState<{
+    category: Category;
+    index: number;
+  } | null>(null);
 
   return (
-    <div className="relative flex flex-1 flex-col">
-      <Image
-        src="/bg/dashboard.png"
-        alt=""
-        fill
-        sizes="430px"
-        className="pointer-events-none object-cover opacity-49 blur-[2px]"
-      />
+    <div className="relative flex flex-1 flex-col bg-background">
+      <PathGlows />
 
-      <div className="relative flex flex-1 flex-col px-6 pt-6 pb-8">
-        <p className="text-eyebrow font-extrabold uppercase text-muted">
-          A1 · начальный
-        </p>
-        <h1 className="mt-1 text-h3">Твой путь обучения</h1>
+      <div className="relative flex flex-1 flex-col px-gutter pt-6 pb-8">
+        <div className="flex flex-col gap-1.25">
+          <Eyebrow>{levelTitles[learner?.level ?? "A1"]}</Eyebrow>
+          <h1 className="text-h3 text-foreground">Твой путь обучения</h1>
+        </div>
 
-        <div className="mt-5 flex-1">
-          {categories.isPending && <StateNote text="Загружаем категории…" />}
+        <div className="mt-10 flex flex-1 flex-col">
+          {categories.isPending && <StateNote text="Загружаем уроки…" />}
           {categories.isError && (
             <StateNote
               text={categories.error.message}
@@ -52,11 +56,14 @@ export function DashboardPage() {
           {categories.data && (
             <SkillTree
               categories={categories.data}
-              completedIds={completedIds ?? []}
+              completedIds={learner?.completedCategoryIds ?? []}
+              onSelect={(category, index) => setPreview({ category, index })}
             />
           )}
         </div>
       </div>
+
+      <LessonPreview lesson={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }

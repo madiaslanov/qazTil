@@ -1,5 +1,6 @@
 export { BackLink } from "./back-link";
 export { BetaBadge } from "./beta-badge";
+export { BottomSheet } from "./bottom-sheet";
 export { Button, buttonVariants } from "./button";
 export { Card } from "./card";
 export { Eyebrow } from "./eyebrow";
