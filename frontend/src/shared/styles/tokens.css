@@ -37,6 +37,7 @@
   --qt-mint-50: #d9f2ef;
   --qt-jade-200: #d8f2e8;
   --qt-jade-100: #cfefe1;
+  --qt-sky-200: #a8e8f0;
 
   --qt-flame: #ff7a2f;
   --qt-heart: #e95b4f;
@@ -75,6 +76,7 @@
   --color-glow: var(--qt-mint-50);
   --color-glow-lime: var(--qt-glow-lime);
   --color-glow-green: var(--qt-glow-green);
+  --color-sky: var(--qt-sky-200);
 
   /* Статусы ответа */
   --color-success: var(--qt-mint-600);
@@ -141,6 +143,7 @@
   --radius-card: 20px;
   --radius-tile: 22px;
   --radius-sheet: 28px;
+  --radius-hero: 36px;
 
   /* Каркас экрана: px-gutter, h-bar, h-nav, h-control… */
   --spacing-gutter: 24px;

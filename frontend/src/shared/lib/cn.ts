@@ -25,7 +25,7 @@ const twMerge = extendTailwindMerge({
         "nano",
         "glyph",
       ],
-      radius: ["option", "chip", "control", "card", "tile", "sheet"],
+      radius: ["option", "chip", "control", "card", "tile", "sheet", "hero"],
       shadow: [
         "button",
         "glow",

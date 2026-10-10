@@ -1,5 +1,5 @@
-import { OnboardingPage } from "@/views/onboarding";
+import { WelcomePage } from "@/views/welcome";
 
 export default function Page() {
-  return <OnboardingPage />;
+  return <WelcomePage />;
 }
