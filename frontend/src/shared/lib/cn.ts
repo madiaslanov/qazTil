@@ -36,6 +36,7 @@ const twMerge = extendTailwindMerge({
         "success",
         "danger",
         "module",
+        "chip",
       ],
       spacing: ["gutter", "bar", "nav", "control", "field", "answer"],
       container: ["phone"],

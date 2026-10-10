@@ -101,6 +101,7 @@
   --shadow-success: 0 -8px 24px 0 rgb(72 191 167 / 0.27);
   --shadow-danger: 0 -8px 24px 0 rgb(232 108 88 / 0.27);
   --shadow-module: 0 10px 20px 0 rgb(120 214 207 / 0.27);
+  --shadow-chip: 0 4px 0 0 rgb(19 40 61 / 0.13);
 }
 
 /* 3. Шкалы */

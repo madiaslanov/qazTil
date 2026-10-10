@@ -24,6 +24,7 @@ export function AnswerFeedback({
   correct,
   answer,
   isLast,
+  speakable = true,
   onNext,
   onRetry,
 }: {
@@ -31,6 +32,8 @@ export function AnswerFeedback({
   /** Правильный вариант ответа. */
   answer: string;
   isLast: boolean;
+  /** Озвучивать ли ответ: для списка пар это не нужно. */
+  speakable?: boolean;
   onNext: () => void;
   onRetry: () => void;
 }) {
@@ -86,7 +89,7 @@ export function AnswerFeedback({
             {answer}
           </p>
         </div>
-        {canSpeak() && (
+        {speakable && canSpeak() && (
           <button
             type="button"
             onClick={() => speak(answer)}

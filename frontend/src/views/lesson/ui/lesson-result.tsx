@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Check, Flame, Target } from "lucide-react";
 
 import { useLearnerStore, XP_PER_CORRECT_ANSWER } from "@/entities/learner";
-import type { Quiz } from "@/entities/quiz";
+import type { LessonScore } from "@/features/quiz-session";
 import { Button, Card, IconBadge, Screen } from "@/shared/ui";
 
 function plural(days: number) {
@@ -17,12 +17,12 @@ function plural(days: number) {
 }
 
 /** Экран после урока: XP, страйк и точность прохождения. */
-export function LessonResult({ quiz }: { quiz: Quiz }) {
+export function LessonResult({ score }: { score: LessonScore }) {
   const streak = useLearnerStore((state) => state.learner?.streak ?? 0);
   const accuracy =
-    quiz.score.total === 0
+    score.total === 0
       ? 0
-      : Math.round((quiz.score.correct / quiz.score.total) * 100);
+      : Math.round((score.correct / score.total) * 100);
 
   return (
     <Screen>
@@ -42,13 +42,13 @@ export function LessonResult({ quiz }: { quiz: Quiz }) {
 
           <div className="flex flex-col items-center gap-2 text-center">
             <p className="text-title text-muted">
-              +{quiz.score.correct * XP_PER_CORRECT_ANSWER} XP
+              +{score.correct * XP_PER_CORRECT_ANSWER} XP
             </p>
             <h1 className="text-hero font-black">
               Урок завершен
             </h1>
             <p className="max-w-73 text-body text-muted">
-              Правильных ответов {quiz.score.correct} из {quiz.score.total}.
+              Правильных ответов {score.correct} из {score.total}.
               Новые слова уже в твоём словаре.
             </p>
           </div>
