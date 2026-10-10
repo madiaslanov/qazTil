@@ -1,0 +1,153 @@
+/*
+ * Дизайн-токены QazTil — единственный источник правды для визуала.
+ * Figma: eHmZ7t6OvfkVYH1oM6MBg7 (мобильный холст 390×844).
+ *
+ * Слои:
+ *   1. Палитра (--qt-*) — сырые цвета бренда. В компонентах напрямую не используем.
+ *   2. Семантика (@theme inline) — роли цветов, шрифт, тени → утилиты Tailwind
+ *      (bg-primary, text-muted, shadow-button…).
+ *   3. Шкалы (@theme) — типографика, радиусы, размеры каркаса.
+ *
+ * Новый цвет/размер сначала добавляется сюда, потом используется в коде.
+ * Произвольные значения вида text-[13px] или bg-[#hex] в компонентах не пишем.
+ */
+
+/* 1. Палитра */
+:root {
+  --qt-white: #ffffff;
+  --qt-black: #000000;
+
+  --qt-navy-950: #0b1c39;
+  --qt-navy-900: #13283d;
+  --qt-charcoal: #20201e;
+
+  --qt-stone-600: #706f69;
+  --qt-stone-200: #e9e7e0;
+  --qt-sand-100: #f5f2ea;
+  --qt-sand-50: #fbfaf7;
+
+  --qt-coral-500: #e86c58;
+  --qt-coral-200: #f9d8d2;
+  --qt-coral-100: #f7d2ca;
+
+  --qt-mint-600: #48bfa7;
+  --qt-mint-400: #78d6cf;
+  --qt-mint-200: #b7e5e2;
+  --qt-mint-100: #ddf4f0;
+  --qt-mint-50: #d9f2ef;
+  --qt-jade-200: #d8f2e8;
+  --qt-jade-100: #cfefe1;
+
+  --qt-flame: #ff7a2f;
+  --qt-heart: #e95b4f;
+  --qt-glow-lime: #dffd9e;
+  --qt-glow-green: #38e49f;
+}
+
+/* 2. Семантика */
+@theme inline {
+  --color-*: initial;
+
+  --color-white: var(--qt-white);
+  --color-black: var(--qt-black);
+
+  /* Поверхности */
+  --color-background: var(--qt-sand-50);
+  --color-surface: var(--qt-white);
+  --color-surface-muted: var(--qt-sand-100);
+  --color-line: var(--qt-stone-200);
+  --color-scrim: rgb(19 40 61 / 0.08);
+
+  /* Текст */
+  --color-foreground: var(--qt-charcoal);
+  --color-heading: var(--qt-navy-950);
+  --color-muted: var(--qt-stone-600);
+
+  /* Действия и акценты */
+  --color-primary: var(--qt-navy-900);
+  --color-primary-foreground: var(--qt-white);
+  --color-accent: var(--qt-coral-500);
+
+  /* Мятная линия бренда: прогресс, выбор, текущий урок */
+  --color-highlight: var(--qt-mint-400);
+  --color-highlight-strong: var(--qt-mint-200);
+  --color-highlight-soft: var(--qt-mint-100);
+  --color-glow: var(--qt-mint-50);
+  --color-glow-lime: var(--qt-glow-lime);
+  --color-glow-green: var(--qt-glow-green);
+
+  /* Статусы ответа */
+  --color-success: var(--qt-mint-600);
+  --color-success-soft: var(--qt-jade-200);
+  --color-success-surface: var(--qt-jade-100);
+  --color-danger: var(--qt-coral-500);
+  --color-danger-soft: var(--qt-coral-200);
+  --color-danger-surface: var(--qt-coral-100);
+
+  /* Счётчики в шапке */
+  --color-streak: var(--qt-flame);
+  --color-lives: var(--qt-heart);
+
+  --font-sans: var(--font-geologica), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-button: 0 5px 0 0 rgb(19 40 61 / 0.17);
+  --shadow-glow: 0 0 12px 7px var(--qt-mint-50);
+  --shadow-selected: 0 0 12px 4px rgb(183 229 226 / 0.6);
+  --shadow-float: 0 14px 20px 0 rgb(19 40 61 / 0.13);
+  --shadow-sheet: 0 -10px 28px 0 rgb(19 40 61 / 0.14);
+  --shadow-dialog: 0 18px 38px 0 rgb(7 21 35 / 0.18);
+  --shadow-success: 0 -8px 24px 0 rgb(72 191 167 / 0.27);
+  --shadow-danger: 0 -8px 24px 0 rgb(232 108 88 / 0.27);
+}
+
+/* 3. Шкалы */
+@theme {
+  /* Типографика (Geologica). Насыщенность задаётся отдельно: font-bold и т.д. */
+  --text-hero: 38px;
+  --text-hero--line-height: 1.02;
+  --text-display: 36px;
+  --text-display--line-height: 1.04;
+  --text-h1: 30px;
+  --text-h1--line-height: 1.08;
+  --text-h2: 28px;
+  --text-h2--line-height: 1.12;
+  --text-h3: 26px;
+  --text-h3--line-height: 1.2;
+  --text-title: 24px;
+  --text-title--line-height: 1.2;
+  --text-stat: 19px;
+  --text-stat--line-height: 1.25;
+  --text-lead: 16px;
+  --text-lead--line-height: 1.25;
+  --text-body: 15px;
+  --text-body--line-height: 1.45;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 1.45;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.4;
+  --text-eyebrow: 12px;
+  --text-eyebrow--line-height: 1.25;
+  --text-micro: 11px;
+  --text-micro--line-height: 1.25;
+  --text-nano: 10px;
+  --text-nano--line-height: 1.25;
+  --text-glyph: 44px;
+  --text-glyph--line-height: 1;
+
+  /* Радиусы */
+  --radius-option: 8px;
+  --radius-chip: 10px;
+  --radius-control: 14px;
+  --radius-card: 20px;
+  --radius-tile: 22px;
+  --radius-sheet: 28px;
+
+  /* Каркас экрана: px-gutter, h-bar, h-nav, h-control… */
+  --spacing-gutter: 24px;
+  --spacing-bar: 82px;
+  --spacing-nav: 84px;
+  --spacing-control: 58px;
+  --spacing-field: 56px;
+  --spacing-answer: 68px;
+  --container-phone: 430px;
+}

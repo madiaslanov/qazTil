@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-[84px] shrink-0 items-center justify-between border-t-[3px] border-ink bg-card px-[34px]">
+    <nav className="flex h-nav shrink-0 items-center justify-between border-t-3 border-primary bg-surface px-8.5">
       {items.map(({ href, label, Icon }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
@@ -29,7 +29,7 @@ export function BottomNav() {
             className="flex flex-col items-center gap-1"
           >
             <Icon
-              className={cn("size-[21px]", active ? "text-orange" : "text-ink")}
+              className={cn("size-5.25", active ? "text-accent" : "text-foreground")}
               strokeWidth={2.2}
             />
             <span className="sr-only">{label}</span>

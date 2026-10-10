@@ -34,21 +34,21 @@ export function OnboardingPage() {
         className="pointer-events-none object-cover opacity-48 blur-[2px]"
       />
 
-      <div className="relative flex flex-1 flex-col gap-6.5 px-6 pt-[34px] pb-7">
+      <div className="relative flex flex-1 flex-col gap-6.5 px-6 pt-8.5 pb-7">
         <div className="flex items-center justify-between">
-          <p className="text-[24px]">QazTil</p>
-          <span className="rounded-full border-2 border-ink bg-orange px-2.5 py-1.5 text-[11px] font-extrabold">
+          <p className="text-title">QazTil</p>
+          <span className="rounded-full border-2 border-primary bg-accent px-2.5 py-1.5 text-micro font-extrabold">
             BETA
           </span>
         </div>
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-[36px] leading-[1.02]">
+          <h1 className="text-display">
             Приобрети новую привычку.
             <br />
             Выучи казахский язык.
           </h1>
-          <p className="text-[15px] leading-[1.45] text-muted">
+          <p className="text-body text-muted">
             Сохраняй ежедневный прогресс и увеличивай свои знания.
           </p>
         </div>

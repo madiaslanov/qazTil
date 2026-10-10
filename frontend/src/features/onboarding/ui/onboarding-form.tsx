@@ -82,7 +82,7 @@ export function OnboardingForm() {
   return (
     <form onSubmit={submit} className="flex flex-1 flex-col gap-6.5">
       <div className="flex flex-col gap-3.5">
-        <div className="flex flex-col gap-[7px]">
+        <div className="flex flex-col gap-1.75">
           <Label htmlFor="email">Почта</Label>
           <Input
             id="email"
@@ -94,7 +94,7 @@ export function OnboardingForm() {
             onChange={(event) => setEmail(event.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-[7px]">
+        <div className="flex flex-col gap-1.75">
           <Label htmlFor="password">Пароль</Label>
           <Input
             id="password"
@@ -114,7 +114,7 @@ export function OnboardingForm() {
           <p
             id="auth-error"
             role="alert"
-            className="text-[13px] font-bold text-orange"
+            className="text-caption font-bold text-accent"
           >
             {error}
           </p>
@@ -130,7 +130,7 @@ export function OnboardingForm() {
         <button
           type="button"
           onClick={switchMode}
-          className="text-[14px] font-bold text-muted underline underline-offset-4"
+          className="text-body-sm font-bold text-muted underline underline-offset-4"
         >
           {mode === "register"
             ? "Уже есть аккаунт? Войти"

@@ -50,20 +50,20 @@ export function QuizSession({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-[82px] shrink-0 items-center gap-4 border-b-[3px] border-ink px-[22px]">
+      <div className="flex h-bar shrink-0 items-center gap-4 border-b-3 border-primary px-5.5">
         <Link href="/learn" aria-label="Выйти из урока">
-          <CircleX className="size-[22px]" strokeWidth={2.2} />
+          <CircleX className="size-5.5" strokeWidth={2.2} />
         </Link>
         <Progress value={session.percent} className="flex-1" />
-        <b className="text-[13px] font-extrabold">{session.percent}%</b>
+        <b className="text-caption font-extrabold">{session.percent}%</b>
       </div>
 
-      <div className="flex flex-1 flex-col gap-7 overflow-y-auto px-6 pt-[34px] pb-6">
+      <div className="flex flex-1 flex-col gap-7 overflow-y-auto px-6 pt-8.5 pb-6">
         <div className="flex flex-col gap-2.5">
-          <p className="text-[13px] font-extrabold uppercase text-orange">
+          <p className="text-caption font-extrabold uppercase text-accent">
             Выбери правильный перевод
           </p>
-          <h1 className="text-[30px] leading-[1.12] text-ink">
+          <h1 className="text-h2 text-foreground">
             Как сказать «{question.prompt}»?
           </h1>
         </div>
@@ -82,11 +82,11 @@ export function QuizSession({
         </div>
 
         {session.error && (
-          <p className="text-[13px] font-bold text-[#c0392b]">{session.error}</p>
+          <p className="text-caption font-bold text-danger">{session.error}</p>
         )}
       </div>
 
-      <div className="shrink-0 border-t-[3px] border-ink bg-card px-6 pt-[18px] pb-7">
+      <div className="shrink-0 border-t-3 border-primary bg-surface px-6 pt-4.5 pb-7">
         {session.checked ? (
           <Button variant="primary" onClick={session.next}>
             {session.index + 1 >= session.total ? "Завершить урок" : "Продолжить"}

@@ -32,12 +32,12 @@ export function DashboardPage() {
         />
 
         <div className="relative flex flex-1 flex-col px-6 pt-6 pb-8">
-          <p className="text-[12px] font-extrabold uppercase text-muted">
+          <p className="text-eyebrow font-extrabold uppercase text-muted">
             A1 · начальный
           </p>
-          <h1 className="mt-1 text-[26px]">Твой путь обучения</h1>
+          <h1 className="mt-1 text-h3">Твой путь обучения</h1>
 
-          <div className="mt-[20px] flex-1">
+          <div className="mt-5 flex-1">
             {categories.isPending && <StateNote text="Загружаем категории…" />}
             {categories.isError && (
               <StateNote

@@ -8,8 +8,8 @@ import { SkillNode, type SkillState } from "./skill-node";
 /** Смещения узлов по горизонтали, чтобы путь шёл змейкой, как в макете. */
 const offsets = [
   "justify-center",
-  "justify-start pl-[72px]",
-  "justify-end pr-[62px]",
+  "justify-start pl-18",
+  "justify-end pr-15.5",
   "justify-center",
 ] as const;
 
@@ -45,9 +45,9 @@ export function SkillTree({
             {index > 0 && (
               <span
                 className={cn(
-                  "my-1 h-[24px] w-[4px] rounded-full",
+                  "my-1 h-6 w-1 rounded-full",
                   connectors[index % connectors.length],
-                  state === "locked" ? "bg-track" : "bg-ink",
+                  state === "locked" ? "bg-line" : "bg-primary",
                 )}
               />
             )}

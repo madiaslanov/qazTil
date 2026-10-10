@@ -10,7 +10,7 @@ function Screen({ className, children, ...props }: React.ComponentProps<"div">) 
   return (
     <div
       className={cn(
-        "relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-paper sm:border-x-[3px] sm:border-ink",
+        "relative mx-auto flex min-h-dvh w-full max-w-phone flex-col overflow-hidden bg-background sm:border-x-3 sm:border-primary",
         className,
       )}
       {...props}

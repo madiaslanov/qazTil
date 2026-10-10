@@ -10,7 +10,7 @@ export function StateNote({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="text-[17px] text-muted">{text}</p>
+      <p className="text-lead text-muted">{text}</p>
       {action}
     </div>
   );

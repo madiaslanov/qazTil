@@ -20,11 +20,11 @@ export function WordsPage() {
 
   return (
     <Screen>
-      <header className="flex h-[82px] shrink-0 items-center gap-3 border-b-[3px] border-ink px-6">
+      <header className="flex h-bar shrink-0 items-center gap-3 border-b-3 border-primary px-6">
         <Link href="/profile" aria-label="Назад в профиль">
-          <ChevronLeft className="size-[22px]" strokeWidth={2.4} />
+          <ChevronLeft className="size-5.5" strokeWidth={2.4} />
         </Link>
-        <p className="text-[23px]">Словарь</p>
+        <p className="text-title">Словарь</p>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-5 pb-8">
@@ -64,12 +64,12 @@ export function WordsPage() {
         {words.data?.map((word) => (
           <Card key={word.id} className="flex flex-col gap-1 p-4">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-[19px]">{word.kazakh}</p>
-              <p className="text-[13px] text-subtle">{word.transcription}</p>
+              <p className="text-stat">{word.kazakh}</p>
+              <p className="text-caption text-muted">{word.transcription}</p>
             </div>
-            <p className="text-[15px] text-muted">{word.russian}</p>
+            <p className="text-body text-muted">{word.russian}</p>
             {word.example_kk && (
-              <p className="mt-1 text-[13px] text-subtle">
+              <p className="mt-1 text-caption text-muted">
                 {word.example_kk} — {word.example_ru}
               </p>
             )}
@@ -97,8 +97,8 @@ function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-full border-2 border-ink px-3 py-1.5 text-[13px] font-extrabold",
-        active ? "bg-orange shadow-hard-sm" : "bg-card",
+        "rounded-full border-2 border-primary px-3 py-1.5 text-caption font-extrabold",
+        active ? "bg-accent shadow-button" : "bg-surface",
       )}
     >
       {children}

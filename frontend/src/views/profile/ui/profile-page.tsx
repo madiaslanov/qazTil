@@ -27,38 +27,38 @@ export function ProfilePage() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-6 pb-8">
         <div>
-          <p className="text-[12px] font-extrabold uppercase text-muted">
+          <p className="text-eyebrow font-extrabold uppercase text-muted">
             Профиль
           </p>
-          <h1 className="mt-1 text-[26px]">{user?.display_name}</h1>
-          <p className="mt-0.5 text-[14px] text-subtle">{user?.email}</p>
+          <h1 className="mt-1 text-h3">{user?.display_name}</h1>
+          <p className="mt-0.5 text-body-sm text-muted">{user?.email}</p>
         </div>
 
         <Card className="flex flex-col gap-4.5 p-5">
           <Stat
             icon={<Flame strokeWidth={2.2} />}
-            tone="bg-orange"
+            tone="bg-accent"
             label="Страйк"
             value={`${learner?.streak ?? 0}`}
           />
-          <div className="h-0.5 w-full bg-ink" />
+          <div className="h-0.5 w-full bg-primary" />
           <Stat
             icon={<Target strokeWidth={2.2} />}
-            tone="bg-green"
+            tone="bg-success"
             label="Опыт"
             value={`${learner?.xp ?? 0} XP`}
           />
-          <div className="h-0.5 w-full bg-ink" />
+          <div className="h-0.5 w-full bg-primary" />
           <Stat
             icon={<Heart strokeWidth={2.2} />}
-            tone="bg-card"
+            tone="bg-surface"
             label="Жизни"
             value={`${learner?.lives ?? 0}`}
           />
         </Card>
 
         <Card className="flex flex-col gap-3 p-5">
-          <p className="text-[12px] font-bold uppercase text-subtle">
+          <p className="text-eyebrow font-bold uppercase text-muted">
             Ежедневная цель
           </p>
           <div className="flex gap-2.5">
@@ -69,10 +69,10 @@ export function ProfilePage() {
                 onClick={() => setDailyGoal(goal)}
                 aria-pressed={learner?.dailyGoal === goal}
                 className={cn(
-                  "h-[52px] flex-1 rounded-field border-[3px] border-ink text-[15px] font-extrabold",
+                  "h-13 flex-1 rounded-option border-3 border-primary text-body font-extrabold",
                   learner?.dailyGoal === goal
-                    ? "bg-orange shadow-hard-sm"
-                    : "bg-paper",
+                    ? "bg-accent shadow-button"
+                    : "bg-background",
                 )}
               >
                 {goal} мин
@@ -96,7 +96,7 @@ export function ProfilePage() {
           href={SWAGGER_URL}
           target="_blank"
           rel="noreferrer"
-          className="text-center text-[13px] text-subtle underline"
+          className="text-center text-caption text-muted underline"
         >
           Swagger API
         </a>
@@ -122,8 +122,8 @@ function Stat({
     <div className="flex items-center gap-3">
       <IconBadge className={tone}>{icon}</IconBadge>
       <div className="flex flex-col gap-0.5">
-        <p className="text-[12px] font-bold uppercase text-subtle">{label}</p>
-        <p className="text-[19px]">{value}</p>
+        <p className="text-eyebrow font-bold uppercase text-muted">{label}</p>
+        <p className="text-stat">{value}</p>
       </div>
     </div>
   );

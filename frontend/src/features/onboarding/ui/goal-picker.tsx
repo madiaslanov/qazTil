@@ -13,7 +13,7 @@ export function GoalPicker({
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-3 text-[18px] font-extrabold">
+      <legend className="mb-3 text-stat font-extrabold">
         Установи ежедневную цель
       </legend>
       <div className="flex gap-2.5">
@@ -24,10 +24,10 @@ export function GoalPicker({
             onClick={() => onChange(goal)}
             aria-pressed={value === goal}
             className={cn(
-              "h-[72px] flex-1 rounded-field border-[3px] border-ink text-[15px] font-extrabold transition-[transform,box-shadow]",
+              "h-18 flex-1 rounded-option border-3 border-primary text-body font-extrabold transition-[transform,box-shadow]",
               value === goal
-                ? "bg-orange shadow-hard-sm"
-                : "bg-card active:translate-x-[2px] active:translate-y-[2px]",
+                ? "bg-accent shadow-button"
+                : "bg-surface active:translate-x-0.5 active:translate-y-0.5",
             )}
           >
             {goal} мин

@@ -34,20 +34,20 @@ export function LessonResult({ quiz }: { quiz: Quiz }) {
         className="pointer-events-none object-cover mix-blend-color-burn"
       />
 
-      <div className="relative flex flex-1 flex-col px-6 pt-[58px] pb-7">
+      <div className="relative flex flex-1 flex-col px-6 pt-14.5 pb-7">
         <div className="flex flex-col items-center gap-6">
-          <span className="flex size-[104px] items-center justify-center rounded-full border-4 border-ink bg-green shadow-hard">
+          <span className="flex size-26 items-center justify-center rounded-full border-4 border-primary bg-success shadow-button">
             <Check className="size-12" strokeWidth={3} />
           </span>
 
           <div className="flex flex-col items-center gap-2 text-center">
-            <p className="text-[22px] text-muted">
+            <p className="text-title text-muted">
               +{quiz.score.correct * XP_PER_CORRECT_ANSWER} XP
             </p>
-            <h1 className="text-[38px] font-black leading-[1.02]">
+            <h1 className="text-hero font-black">
               Урок завершен
             </h1>
-            <p className="max-w-[292px] text-[15px] leading-[1.45] text-muted">
+            <p className="max-w-73 text-body text-muted">
               Правильных ответов {quiz.score.correct} из {quiz.score.total}.
               Новые слова уже в твоём словаре.
             </p>
@@ -55,30 +55,30 @@ export function LessonResult({ quiz }: { quiz: Quiz }) {
 
           <Card className="flex w-full flex-col gap-4.5 p-5">
             <div className="flex items-center gap-3">
-              <IconBadge className="bg-orange">
+              <IconBadge className="bg-accent">
                 <Flame strokeWidth={2.2} />
               </IconBadge>
               <div className="flex flex-col gap-0.5">
-                <p className="text-[12px] font-bold uppercase text-subtle">
+                <p className="text-eyebrow font-bold uppercase text-muted">
                   Страйк
                 </p>
-                <p className="text-[19px]">
+                <p className="text-stat">
                   {streak} {plural(streak)}
                 </p>
               </div>
             </div>
 
-            <div className="h-0.5 w-full bg-ink" />
+            <div className="h-0.5 w-full bg-primary" />
 
             <div className="flex items-center gap-3">
-              <IconBadge className="bg-green">
+              <IconBadge className="bg-success">
                 <Target strokeWidth={2.2} />
               </IconBadge>
               <div className="flex flex-col gap-0.5">
-                <p className="text-[12px] font-bold uppercase text-subtle">
+                <p className="text-eyebrow font-bold uppercase text-muted">
                   Точность
                 </p>
-                <p className="text-[19px]">{accuracy}%</p>
+                <p className="text-stat">{accuracy}%</p>
               </div>
             </div>
           </Card>

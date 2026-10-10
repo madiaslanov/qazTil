@@ -42,18 +42,18 @@ export function AnswerTile({
       disabled={correctIndex !== null}
       aria-pressed={selected === index}
       className={cn(
-        "flex h-[76px] w-full items-center gap-3.5 rounded-tile border-[3px] border-ink px-[18px] text-left transition-[transform,box-shadow]",
-        tone === "idle" && "bg-card",
-        tone === "selected" && "bg-orange shadow-hard-sm",
-        tone === "correct" && "bg-green shadow-hard-sm",
-        tone === "wrong" && "bg-[#e8705f] shadow-hard-sm",
-        correctIndex === null && "active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        "flex h-19 w-full items-center gap-3.5 rounded-control border-3 border-primary px-4.5 text-left transition-[transform,box-shadow]",
+        tone === "idle" && "bg-surface",
+        tone === "selected" && "bg-accent shadow-button",
+        tone === "correct" && "bg-success shadow-button",
+        tone === "wrong" && "bg-danger shadow-button",
+        correctIndex === null && "active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
       )}
     >
-      <span className="flex size-[30px] shrink-0 items-center justify-center rounded-field border-2 border-ink bg-paper text-[13px] font-extrabold">
+      <span className="flex size-7.5 shrink-0 items-center justify-center rounded-option border-2 border-primary bg-background text-caption font-extrabold">
         {letters[index] ?? index + 1}
       </span>
-      <span className="text-[17px] text-ink">{option}</span>
+      <span className="text-lead text-foreground">{option}</span>
     </button>
   );
 }

@@ -17,10 +17,10 @@ export function ProgressPage() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-6 pb-8">
         <div>
-          <p className="text-[12px] font-extrabold uppercase text-muted">
+          <p className="text-eyebrow font-extrabold uppercase text-muted">
             Статистика
           </p>
-          <h1 className="mt-1 text-[26px]">Твой прогресс</h1>
+          <h1 className="mt-1 text-h3">Твой прогресс</h1>
         </div>
 
         {progress.isPending && <StateNote text="Считаем ответы…" />}
@@ -53,15 +53,15 @@ export function ProgressPage() {
             <Card key={item.category_id} className="flex flex-col gap-3 p-5">
               <div className="flex items-baseline justify-between gap-3">
                 <div>
-                  <p className="text-[19px]">{item.category_name_ru}</p>
-                  <p className="text-[13px] text-subtle">
+                  <p className="text-stat">{item.category_name_ru}</p>
+                  <p className="text-caption text-muted">
                     {item.category_name_kk}
                   </p>
                 </div>
-                <b className="text-[19px] font-extrabold">{percent}%</b>
+                <b className="text-stat font-extrabold">{percent}%</b>
               </div>
               <Progress value={percent} />
-              <p className="text-[13px] text-muted">
+              <p className="text-caption text-muted">
                 Верно {item.correct_answers} из {item.total_answers}
               </p>
             </Card>
