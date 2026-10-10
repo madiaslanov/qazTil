@@ -6,13 +6,14 @@ import {
   XP_PER_CORRECT_ANSWER,
   type DailyGoal,
   type Learner,
+  type LearnerPrefs,
 } from "./types";
 
 type LearnerState = {
   learner: Learner | null;
   /** persist поднимается вручную в провайдере, до этого состояние пустое. */
   hydrated: boolean;
-  create: (email: string, dailyGoal: DailyGoal) => void;
+  create: (email: string, prefs: LearnerPrefs) => void;
   setDailyGoal: (dailyGoal: DailyGoal) => void;
   loseLife: () => void;
   completeLesson: (categoryId: number, correctAnswers: number) => void;
@@ -32,11 +33,11 @@ export const useLearnerStore = create<LearnerState>()(
       learner: null,
       hydrated: false,
 
-      create: (email, dailyGoal) =>
+      create: (email, prefs) =>
         set({
           learner: {
             email,
-            dailyGoal,
+            ...prefs,
             xp: 0,
             lives: MAX_LIVES,
             streak: 0,

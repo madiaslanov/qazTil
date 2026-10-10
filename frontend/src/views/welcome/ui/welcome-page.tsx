@@ -5,13 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { GuestGuard } from "@/features/auth";
-import { Button, Eyebrow, Logo, PageDots, Screen } from "@/shared/ui";
+import {
+  BetaBadge,
+  Button,
+  Eyebrow,
+  Logo,
+  PageDots,
+  Screen,
+} from "@/shared/ui";
 
 import { WELCOME_SLIDES } from "../model/slides";
 import { WelcomeIllustration } from "./welcome-illustration";
 
-/** После приветствия — настройка маршрута и регистрация. */
-const NEXT_ROUTE = "/register";
+/** После приветствия — настройка маршрута, потом регистрация. */
+const NEXT_ROUTE = "/setup";
 /** Минимальный горизонтальный свайп, чтобы перелистнуть слайд. */
 const SWIPE_THRESHOLD = 50;
 
@@ -57,9 +64,7 @@ function WelcomeSlides() {
       <header className="flex h-9 items-center justify-between">
         <Logo />
         {isLast ? (
-          <span className="rounded-full bg-danger-soft px-2.5 py-1.5 text-micro font-extrabold text-heading">
-            BETA
-          </span>
+          <BetaBadge />
         ) : (
           <Link
             href={NEXT_ROUTE}
