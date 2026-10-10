@@ -10,6 +10,7 @@ export { IconBadge } from "./icon-badge";
 export { Input } from "./input";
 export { Label } from "./label";
 export { Logo } from "./logo";
+export { Modal } from "./modal";
 export { OptionCard } from "./option-card";
 export { PageDots } from "./page-dots";
 export { Progress } from "./progress";

@@ -2,12 +2,13 @@
 
 import { Flame, Heart } from "lucide-react";
 
-import { useLearnerStore } from "@/entities/learner";
+import { useLearnerStore, useLives } from "@/entities/learner";
 import { Logo } from "@/shared/ui";
 
 /** Шапка вкладок: логотип слева, страйк и жизни справа. */
 export function TopBar() {
   const learner = useLearnerStore((state) => state.learner);
+  const { lives } = useLives();
 
   return (
     <header className="flex h-bar shrink-0 items-center justify-between bg-surface px-gutter">
@@ -20,7 +21,7 @@ export function TopBar() {
         />
         <Counter
           label="Жизни"
-          value={learner?.lives ?? 0}
+          value={lives}
           icon={<Heart className="size-5.5 text-lives" />}
         />
       </div>

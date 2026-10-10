@@ -23,10 +23,14 @@ export type Learner = {
   lastLessonOn: string | null;
   /** Категории, по которым урок уже пройден. */
   completedCategoryIds: number[];
+  /** Когда восстановится следующая жизнь, ms. null — запас полный. */
+  nextLifeAt?: number | null;
 };
 
 /** Что ученик выбирает сам при регистрации. */
 export type LearnerPrefs = Pick<Learner, "dailyGoal" | "level" | "motivation">;
 
 export const MAX_LIVES = 5;
+/** Одна жизнь восстанавливается за полчаса. */
+export const LIFE_REGEN_MS = 30 * 60 * 1000;
 export const XP_PER_CORRECT_ANSWER = 5;

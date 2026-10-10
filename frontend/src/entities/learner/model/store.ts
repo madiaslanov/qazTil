@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import {
+  LIFE_REGEN_MS,
   MAX_LIVES,
   XP_PER_CORRECT_ANSWER,
   type DailyGoal,
@@ -16,6 +17,8 @@ type LearnerState = {
   create: (email: string, prefs: LearnerPrefs) => void;
   setDailyGoal: (dailyGoal: DailyGoal) => void;
   loseLife: () => void;
+  /** Начисляет жизни, которые успели восстановиться к моменту now. */
+  regenerateLives: (now: number) => void;
   completeLesson: (categoryId: number, correctAnswers: number) => void;
   reset: () => void;
   markHydrated: () => void;
@@ -52,11 +55,36 @@ export const useLearnerStore = create<LearnerState>()(
         })),
 
       loseLife: () =>
-        set(({ learner }) => ({
-          learner: learner
-            ? { ...learner, lives: Math.max(0, learner.lives - 1) }
-            : null,
-        })),
+        set(({ learner }) => {
+          if (!learner) return { learner };
+          return {
+            learner: {
+              ...learner,
+              lives: Math.max(0, learner.lives - 1),
+              // Таймер стартует с первой потерянной жизни и дальше не сдвигается.
+              nextLifeAt: learner.nextLifeAt ?? Date.now() + LIFE_REGEN_MS,
+            },
+          };
+        }),
+
+      regenerateLives: (now) =>
+        set(({ learner }) => {
+          if (!learner?.nextLifeAt || now < learner.nextLifeAt) {
+            return { learner };
+          }
+          const earned = 1 + Math.floor((now - learner.nextLifeAt) / LIFE_REGEN_MS);
+          const lives = Math.min(MAX_LIVES, learner.lives + earned);
+          return {
+            learner: {
+              ...learner,
+              lives,
+              nextLifeAt:
+                lives === MAX_LIVES
+                  ? null
+                  : learner.nextLifeAt + earned * LIFE_REGEN_MS,
+            },
+          };
+        }),
 
       completeLesson: (categoryId, correctAnswers) =>
         set(({ learner }) => {
@@ -74,6 +102,7 @@ export const useLearnerStore = create<LearnerState>()(
               ...learner,
               xp: learner.xp + correctAnswers * XP_PER_CORRECT_ANSWER,
               lives: MAX_LIVES,
+              nextLifeAt: null,
               streak,
               lastLessonOn: today,
               completedCategoryIds: learner.completedCategoryIds.includes(
