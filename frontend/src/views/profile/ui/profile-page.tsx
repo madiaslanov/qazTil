@@ -8,9 +8,7 @@ import { useSessionStore } from "@/entities/session";
 import { useSignOut } from "@/features/auth";
 import { SWAGGER_URL } from "@/shared/config/env";
 import { cn } from "@/shared/lib/cn";
-import { Button, Card, IconBadge, Screen } from "@/shared/ui";
-import { BottomNav } from "@/widgets/bottom-nav";
-import { TopBar } from "@/widgets/top-bar";
+import { Button, Card, IconBadge } from "@/shared/ui";
 
 const goals: DailyGoal[] = [5, 10, 15];
 
@@ -22,88 +20,82 @@ export function ProfilePage() {
   const signOut = useSignOut();
 
   return (
-    <Screen>
-      <TopBar />
-
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-6 pb-8">
-        <div>
-          <p className="text-eyebrow font-extrabold uppercase text-muted">
-            Профиль
-          </p>
-          <h1 className="mt-1 text-h3">{user?.display_name}</h1>
-          <p className="mt-0.5 text-body-sm text-muted">{user?.email}</p>
-        </div>
-
-        <Card className="flex flex-col gap-4.5 p-5">
-          <Stat
-            icon={<Flame strokeWidth={2.2} />}
-            tone="bg-accent"
-            label="Страйк"
-            value={`${learner?.streak ?? 0}`}
-          />
-          <div className="h-0.5 w-full bg-primary" />
-          <Stat
-            icon={<Target strokeWidth={2.2} />}
-            tone="bg-success"
-            label="Опыт"
-            value={`${learner?.xp ?? 0} XP`}
-          />
-          <div className="h-0.5 w-full bg-primary" />
-          <Stat
-            icon={<Heart strokeWidth={2.2} />}
-            tone="bg-surface"
-            label="Жизни"
-            value={`${learner?.lives ?? 0}`}
-          />
-        </Card>
-
-        <Card className="flex flex-col gap-3 p-5">
-          <p className="text-eyebrow font-bold uppercase text-muted">
-            Ежедневная цель
-          </p>
-          <div className="flex gap-2.5">
-            {goals.map((goal) => (
-              <button
-                key={goal}
-                type="button"
-                onClick={() => setDailyGoal(goal)}
-                aria-pressed={learner?.dailyGoal === goal}
-                className={cn(
-                  "h-13 flex-1 rounded-option border-3 border-primary text-body font-extrabold",
-                  learner?.dailyGoal === goal
-                    ? "bg-accent shadow-button"
-                    : "bg-background",
-                )}
-              >
-                {goal} мин
-              </button>
-            ))}
-          </div>
-        </Card>
-
-        <Button asChild variant="secondary">
-          <Link href="/words">
-            <BookOpen className="size-5" strokeWidth={2.2} />
-            Словарь
-          </Link>
-        </Button>
-
-        <Button variant="ghost" size="md" onClick={signOut} className="w-full">
-          Выйти
-        </Button>
-
-        <a
-          href={SWAGGER_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="text-center text-caption text-muted underline"
-        >
-          Swagger API
-        </a>
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 pt-6 pb-8">
+      <div>
+        <p className="text-eyebrow font-extrabold uppercase text-muted">
+          Профиль
+        </p>
+        <h1 className="mt-1 text-h3">{user?.display_name}</h1>
+        <p className="mt-0.5 text-body-sm text-muted">{user?.email}</p>
       </div>
 
-      <BottomNav />
-    </Screen>
+      <Card className="flex flex-col gap-4.5 p-5">
+        <Stat
+          icon={<Flame strokeWidth={2.2} />}
+          tone="bg-accent"
+          label="Страйк"
+          value={`${learner?.streak ?? 0}`}
+        />
+        <div className="h-0.5 w-full bg-primary" />
+        <Stat
+          icon={<Target strokeWidth={2.2} />}
+          tone="bg-success"
+          label="Опыт"
+          value={`${learner?.xp ?? 0} XP`}
+        />
+        <div className="h-0.5 w-full bg-primary" />
+        <Stat
+          icon={<Heart strokeWidth={2.2} />}
+          tone="bg-surface"
+          label="Жизни"
+          value={`${learner?.lives ?? 0}`}
+        />
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-5">
+        <p className="text-eyebrow font-bold uppercase text-muted">
+          Ежедневная цель
+        </p>
+        <div className="flex gap-2.5">
+          {goals.map((goal) => (
+            <button
+              key={goal}
+              type="button"
+              onClick={() => setDailyGoal(goal)}
+              aria-pressed={learner?.dailyGoal === goal}
+              className={cn(
+                "h-13 flex-1 rounded-option border-3 border-primary text-body font-extrabold",
+                learner?.dailyGoal === goal
+                  ? "bg-accent shadow-button"
+                  : "bg-background",
+              )}
+            >
+              {goal} мин
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Button asChild variant="secondary">
+        <Link href="/words">
+          <BookOpen className="size-5" strokeWidth={2.2} />
+          Словарь
+        </Link>
+      </Button>
+
+      <Button variant="ghost" size="md" onClick={signOut} className="w-full">
+        Выйти
+      </Button>
+
+      <a
+        href={SWAGGER_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="text-center text-caption text-muted underline"
+      >
+        Swagger API
+      </a>
+    </div>
   );
 }
 
