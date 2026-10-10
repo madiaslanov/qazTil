@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Check, Flame, Target } from "lucide-react";
 
@@ -10,7 +9,7 @@ import { Button, Card, IconBadge, Screen } from "@/shared/ui";
 
 function plural(days: number) {
   const tail = days % 10;
-  if (days > 10 && days < 20) return "дней";
+  if (days % 100 > 10 && days % 100 < 20) return "дней";
   if (tail === 1) return "день";
   if (tail >= 2 && tail <= 4) return "дня";
   return "дней";
@@ -20,76 +19,67 @@ function plural(days: number) {
 export function LessonResult({ score }: { score: LessonScore }) {
   const streak = useLearnerStore((state) => state.learner?.streak ?? 0);
   const accuracy =
-    score.total === 0
-      ? 0
-      : Math.round((score.correct / score.total) * 100);
+    score.total === 0 ? 0 : Math.round((score.correct / score.total) * 100);
 
   return (
-    <Screen>
-      <Image
-        src="/bg/complete.png"
-        alt=""
-        fill
-        sizes="430px"
-        className="pointer-events-none object-cover mix-blend-color-burn"
-      />
+    <Screen className="px-gutter pt-22 pb-7.5">
+      <div className="flex flex-col items-center gap-6">
+        <span className="flex size-26 items-center justify-center rounded-full bg-highlight-strong shadow-glow">
+          <Check className="size-12 text-black" />
+        </span>
 
-      <div className="relative flex flex-1 flex-col px-6 pt-14.5 pb-7">
-        <div className="flex flex-col items-center gap-6">
-          <span className="flex size-26 items-center justify-center rounded-full border-4 border-primary bg-success shadow-button">
-            <Check className="size-12" strokeWidth={3} />
-          </span>
-
-          <div className="flex flex-col items-center gap-2 text-center">
-            <p className="text-title text-muted">
-              +{score.correct * XP_PER_CORRECT_ANSWER} XP
-            </p>
-            <h1 className="text-hero font-black">
-              Урок завершен
-            </h1>
-            <p className="max-w-73 text-body text-muted">
-              Правильных ответов {score.correct} из {score.total}.
-              Новые слова уже в твоём словаре.
-            </p>
-          </div>
-
-          <Card className="flex w-full flex-col gap-4.5 p-5">
-            <div className="flex items-center gap-3">
-              <IconBadge className="bg-accent">
-                <Flame strokeWidth={2.2} />
-              </IconBadge>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-eyebrow font-bold uppercase text-muted">
-                  Страйк
-                </p>
-                <p className="text-stat">
-                  {streak} {plural(streak)}
-                </p>
-              </div>
-            </div>
-
-            <div className="h-0.5 w-full bg-primary" />
-
-            <div className="flex items-center gap-3">
-              <IconBadge className="bg-success">
-                <Target strokeWidth={2.2} />
-              </IconBadge>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-eyebrow font-bold uppercase text-muted">
-                  Точность
-                </p>
-                <p className="text-stat">{accuracy}%</p>
-              </div>
-            </div>
-          </Card>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="text-title text-muted">
+            +{score.correct * XP_PER_CORRECT_ANSWER} XP
+          </p>
+          <h1 className="text-hero font-black text-foreground">Урок завершен</h1>
+          <p className="max-w-73 text-body text-muted">
+            Сильная работа: верно {score.correct} из {score.total}. Новые
+            слова уже в твоём словаре.
+          </p>
         </div>
 
-        <div className="mt-auto pt-8">
-          <Button asChild variant="primary">
-            <Link href="/learn">Продолжить</Link>
-          </Button>
-        </div>
+        <Card className="flex w-full flex-col gap-4.5 p-5">
+          <Stat
+            icon={<Flame />}
+            tone="bg-lives"
+            label="Страйк"
+            value={`${streak} ${plural(streak)}`}
+          />
+          <Stat
+            icon={<Target />}
+            tone="bg-highlight"
+            label="Точность"
+            value={`${accuracy}%`}
+          />
+        </Card>
       </div>
+
+      <Button asChild className="mt-auto">
+        <Link href="/learn">Продолжить</Link>
+      </Button>
     </Screen>
+  );
+}
+
+function Stat({
+  icon,
+  tone,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  tone: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <IconBadge className={`${tone} text-foreground`}>{icon}</IconBadge>
+      <div className="flex flex-col gap-0.5">
+        <p className="text-eyebrow font-bold text-muted uppercase">{label}</p>
+        <p className="text-stat text-foreground">{value}</p>
+      </div>
+    </div>
   );
 }
