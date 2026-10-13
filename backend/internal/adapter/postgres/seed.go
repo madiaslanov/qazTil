@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -38,20 +38,16 @@ func Seed(ctx context.Context, db *sql.DB) (bool, error) {
 	defer rollback(tx)
 
 	for _, category := range starter {
-		res, err := tx.ExecContext(ctx, `
+		categoryID, err := insertID(ctx, tx, `
 			INSERT INTO categories (name_kk, name_ru, description)
-			VALUES (?, ?, ?)`, category.nameKK, category.nameRU, category.description)
-		if err != nil {
-			return false, err
-		}
-		categoryID, err := res.LastInsertId()
+			VALUES ($1, $2, $3)`, category.nameKK, category.nameRU, category.description)
 		if err != nil {
 			return false, err
 		}
 		for _, word := range category.words {
 			if _, err := tx.ExecContext(ctx, `
 				INSERT INTO words (category_id, kazakh, russian, transcription, example_kk, example_ru)
-				VALUES (?, ?, ?, ?, ?, ?)`,
+				VALUES ($1, $2, $3, $4, $5, $6)`,
 				categoryID, word.kazakh, word.russian, word.transcription, word.exampleKK, word.exampleRU); err != nil {
 				return false, fmt.Errorf("seed word %s: %w", word.kazakh, err)
 			}

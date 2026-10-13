@@ -2,7 +2,7 @@
 
 Базовое приложение для изучения казахского языка. Словарь, категории, ситуативные слова, юниты с уроками и упражнениями, квиз и прогресс одного локального ученика. Авторизации нет.
 
-Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и SQLite, `main.go` собирает их вместе. Клиент — в `frontend/`: Next.js (App Router) по архитектуре Feature-Sliced Design.
+Код сервера лежит в `backend/`: `internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP и Postgres, `main.go` собирает их вместе. Клиент — в `frontend/`: Next.js (App Router) по архитектуре Feature-Sliced Design.
 
 Фронтенд и бэкенд деплоятся отдельно: страница — на Vercel, API — на Render. Поэтому сервер отдаёт только JSON и разрешает запросы с домена фронтенда через CORS.
 
@@ -27,7 +27,7 @@ cd frontend && npm install && npm run dev
 Переменные окружения:
 
 - `ADDR` — адрес, по умолчанию `:8080`. Если задан `PORT` (так делает Render), сервер слушает `:$PORT`
-- `DB_PATH` — файл SQLite, по умолчанию `data/qaztil.db`
+- `DATABASE_URL` — строка Postgres, обязательна. Локально: `postgres://qaztil:qaztil@localhost:5432/qaztil?sslmode=disable`
 - `ALLOWED_ORIGINS` — домены фронтенда через запятую. По умолчанию `http://localhost:3000` и `https://qaz-til.vercel.app`
 - `WEB_DIR` — каталог статики. По умолчанию пуст: сервер статику не отдаёт
 
@@ -80,7 +80,7 @@ Next.js 16 (App Router), Tailwind v4, shadcn/ui для базовых прими
 
 Сервисы не собирают файлы друг друга.
 
-**Render, API.** Root Directory — `backend`. Команду сборки оставьте ту, что Render ставит сам: `go build -tags netgo -ldflags '-s -w' -o app`. Start Command: `./app`. Health Check Path: `/health`. `ALLOWED_ORIGINS` в `render.yaml` уже включает `https://qaz-til.vercel.app`. Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk`, тогда SQLite живёт только до следующего деплоя.
+**Render, API.** Root Directory — `backend`. Команду сборки оставьте ту, что Render ставит сам: `go build -tags netgo -ldflags '-s -w' -o app`. Start Command: `./app`. Health Check Path: `/health`. `ALLOWED_ORIGINS` в `render.yaml` уже включает `https://qaz-til.vercel.app`. База — Postgres `qaztil-db` из того же файла: `DATABASE_URL` берётся из неё по приватной сети. Диск для SQLite больше не нужен.
 
 **Vercel, страница.** Root Directory — `frontend/`, сборка стандартная (`next build`). Адрес страницы: `https://qaz-til.vercel.app`. `NEXT_PUBLIC_API_URL` уже задан в `frontend/.env.production` как `https://qaztil.onrender.com/api/v1` и попадает в клиент на сборке.
 

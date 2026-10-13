@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func (r *SituationRepo) Get(ctx context.Context, id int64) (domain.Situation, er
 		SELECT s.id, s.slug, s.title_kk, s.title_ru, s.description, s.position,
 			(SELECT COUNT(*) FROM situation_words w WHERE w.situation_id = s.id)
 		FROM situations s
-		WHERE s.id = ?`, id)
+		WHERE s.id = $1`, id)
 	item, err := scanSituation(row)
 	if err != nil {
 		return domain.Situation{}, mapErr(err)
@@ -54,7 +54,7 @@ func (r *SituationRepo) ListWords(ctx context.Context, situationID int64) ([]dom
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, situation_id, kazakh, russian, transcription, position
 		FROM situation_words
-		WHERE situation_id = ?
+		WHERE situation_id = $1
 		ORDER BY position, id`, situationID)
 	if err != nil {
 		return nil, err

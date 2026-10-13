@@ -1,10 +1,10 @@
-package sqlite_test
+package postgres_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/madiaslanov/qazTil/internal/adapter/sqlite"
+	"github.com/madiaslanov/qazTil/internal/adapter/postgres"
 	"github.com/madiaslanov/qazTil/internal/domain"
 	"github.com/madiaslanov/qazTil/internal/usecase"
 )
@@ -12,18 +12,18 @@ import (
 func TestSeedCourse(t *testing.T) {
 	ctx := context.Background()
 	db := openTestDB(t)
-	if err := sqlite.Migrate(ctx, db); err != nil {
+	if err := postgres.Migrate(ctx, db); err != nil {
 		t.Fatal(err)
 	}
 
-	seeded, err := sqlite.SeedCourse(ctx, db)
+	seeded, err := postgres.SeedCourse(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !seeded {
 		t.Fatal("expected course seed")
 	}
-	seeded, err = sqlite.SeedCourse(ctx, db)
+	seeded, err = postgres.SeedCourse(ctx, db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestSeedCourse(t *testing.T) {
 		t.Fatal("course seed ran twice")
 	}
 
-	situations, err := sqlite.NewSituationRepo(db).List(ctx)
+	situations, err := postgres.NewSituationRepo(db).List(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,7 @@ func TestSeedCourse(t *testing.T) {
 		t.Fatalf("situations = %+v", situations)
 	}
 
-	opened, words, err := usecase.NewSituationService(sqlite.NewSituationRepo(db)).Open(ctx, situations[0].ID)
+	opened, words, err := usecase.NewSituationService(postgres.NewSituationRepo(db)).Open(ctx, situations[0].ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func TestSeedCourse(t *testing.T) {
 		t.Fatalf("open = %+v words=%d", opened, len(words))
 	}
 
-	course := sqlite.NewCourseRepo(db)
+	course := postgres.NewCourseRepo(db)
 	units, err := course.ListUnits(ctx)
 	if err != nil {
 		t.Fatal(err)

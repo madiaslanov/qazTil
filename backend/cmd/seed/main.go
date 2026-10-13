@@ -5,34 +5,36 @@ import (
 	"log"
 	"os"
 
-	"github.com/madiaslanov/qazTil/internal/adapter/sqlite"
+	"github.com/madiaslanov/qazTil/internal/adapter/postgres"
+	"github.com/madiaslanov/qazTil/internal/config"
 )
 
 // Fills an empty database with starter vocabulary and the situational course.
-// Existing rows are left in place. DB_PATH defaults to data/qaztil.db.
+// Existing rows are left in place. DATABASE_URL is required.
 func main() {
-	path := os.Getenv("DB_PATH")
-	if path == "" {
-		path = "data/qaztil.db"
+	config.LoadDotEnv()
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Fatal("DATABASE_URL is required")
 	}
 
-	db, err := sqlite.Open(path)
+	db, err := postgres.Open(dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	ctx := context.Background()
-	if err := sqlite.Migrate(ctx, db); err != nil {
+	if err := postgres.Migrate(ctx, db); err != nil {
 		log.Fatal(err)
 	}
-	vocab, err := sqlite.Seed(ctx, db)
+	vocab, err := postgres.Seed(ctx, db)
 	if err != nil {
 		log.Fatal(err)
 	}
-	course, err := sqlite.SeedCourse(ctx, db)
+	course, err := postgres.SeedCourse(ctx, db)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("db %s: vocabulary seeded=%v, course seeded=%v", path, vocab, course)
+	log.Printf("vocabulary seeded=%v, course seeded=%v", vocab, course)
 }

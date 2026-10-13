@@ -1,9 +1,8 @@
-package sqlite
+package postgres
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/madiaslanov/qazTil/internal/domain"
 )
@@ -42,7 +41,7 @@ func (r *CategoryRepo) Get(ctx context.Context, id int64) (domain.Category, erro
 	err := r.db.QueryRowContext(ctx, `
 		SELECT id, name_kk, name_ru, description
 		FROM categories
-		WHERE id = ?`, id).Scan(&category.ID, &category.NameKK, &category.NameRU, &category.Description)
+		WHERE id = $1`, id).Scan(&category.ID, &category.NameKK, &category.NameRU, &category.Description)
 	if err != nil {
 		return domain.Category{}, mapErr(err)
 	}
@@ -50,13 +49,9 @@ func (r *CategoryRepo) Get(ctx context.Context, id int64) (domain.Category, erro
 }
 
 func (r *CategoryRepo) Create(ctx context.Context, category domain.Category) (domain.Category, error) {
-	res, err := r.db.ExecContext(ctx, `
+	id, err := insertID(ctx, r.db, `
 		INSERT INTO categories (name_kk, name_ru, description)
-		VALUES (?, ?, ?)`, category.NameKK, category.NameRU, category.Description)
-	if err != nil {
-		return domain.Category{}, err
-	}
-	id, err := res.LastInsertId()
+		VALUES ($1, $2, $3)`, category.NameKK, category.NameRU, category.Description)
 	if err != nil {
 		return domain.Category{}, err
 	}
@@ -66,8 +61,8 @@ func (r *CategoryRepo) Create(ctx context.Context, category domain.Category) (do
 func (r *CategoryRepo) Update(ctx context.Context, category domain.Category) (domain.Category, error) {
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE categories
-		SET name_kk = ?, name_ru = ?, description = ?
-		WHERE id = ?`, category.NameKK, category.NameRU, category.Description, category.ID)
+		SET name_kk = $1, name_ru = $2, description = $3
+		WHERE id = $4`, category.NameKK, category.NameRU, category.Description, category.ID)
 	if err != nil {
 		return domain.Category{}, err
 	}
@@ -78,27 +73,9 @@ func (r *CategoryRepo) Update(ctx context.Context, category domain.Category) (do
 }
 
 func (r *CategoryRepo) Delete(ctx context.Context, id int64) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM categories WHERE id = ?`, id)
+	res, err := r.db.ExecContext(ctx, `DELETE FROM categories WHERE id = $1`, id)
 	if err != nil {
 		return err
 	}
 	return missingRow(res)
-}
-
-func missingRow(res sql.Result) error {
-	n, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if n == 0 {
-		return domain.ErrNotFound
-	}
-	return nil
-}
-
-func mapErr(err error) error {
-	if errors.Is(err, sql.ErrNoRows) {
-		return domain.ErrNotFound
-	}
-	return err
 }

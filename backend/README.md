@@ -2,7 +2,7 @@
 
 HTTP API на Go для изучения казахского языка: категории, словарь, ситуативные слова, юниты с уроками и упражнениями, квиз и прогресс одного локального ученика. Авторизации нет. Страница живёт отдельно, в `../frontend`, и ходит сюда только за JSON.
 
-`internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP (chi) и SQLite, `main.go` собирает их вместе.
+`internal/domain` ни от кого не зависит, `internal/usecase` знает только домен, `internal/adapter` реализует HTTP (chi) и Postgres, `main.go` собирает их вместе.
 
 Прод-хост: `https://qaztil.onrender.com/`.
 
@@ -23,7 +23,7 @@ make run
 ## Переменные окружения
 
 - `ADDR` — адрес, по умолчанию `:8080`. Если задан `PORT` (так делает Render), сервер слушает `:$PORT`
-- `DB_PATH` — файл SQLite, по умолчанию `data/qaztil.db`
+- `DATABASE_URL` — строка Postgres, обязательна. Локально: `postgres://qaztil:qaztil@localhost:5432/qaztil?sslmode=disable`
 - `ALLOWED_ORIGINS` — домены фронтенда через запятую. По умолчанию `http://localhost:3000` и `https://qaz-til.vercel.app`
 - `WEB_DIR` — каталог статики. По умолчанию пуст: сервер статику не отдаёт
 
@@ -64,7 +64,7 @@ Render, Root Directory — `backend`. Тот же контракт лежит в
 - Start Command: `./app`
 - Health Check Path: `/health`
 
-Диск `/var/data` доступен на платном инстансе; на бесплатном уберите блок `disk` из `render.yaml`, тогда SQLite живёт только до следующего деплоя.
+Postgres описан в `../render.yaml` как база `qaztil-db`. Сервис получает `DATABASE_URL` из неё. Диск для SQLite не используется.
 
 Чтобы чужой коммит фронтенда не пересобирал API, на Render в Build Filters включите путь `backend/**`.
 

@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func (r *WordRepo) List(ctx context.Context, categoryID *int64) ([]domain.Word, 
 		FROM words`
 	var args []any
 	if categoryID != nil {
-		query += ` WHERE category_id = ?`
+		query += ` WHERE category_id = $1`
 		args = append(args, *categoryID)
 	}
 	query += ` ORDER BY id`
@@ -47,7 +47,7 @@ func (r *WordRepo) Get(ctx context.Context, id int64) (domain.Word, error) {
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, category_id, kazakh, russian, transcription, example_kk, example_ru
 		FROM words
-		WHERE id = ?`, id)
+		WHERE id = $1`, id)
 	word, err := scanWord(row)
 	if err != nil {
 		return domain.Word{}, mapErr(err)
@@ -56,14 +56,10 @@ func (r *WordRepo) Get(ctx context.Context, id int64) (domain.Word, error) {
 }
 
 func (r *WordRepo) Create(ctx context.Context, word domain.Word) (domain.Word, error) {
-	res, err := r.db.ExecContext(ctx, `
+	id, err := insertID(ctx, r.db, `
 		INSERT INTO words (category_id, kazakh, russian, transcription, example_kk, example_ru)
-		VALUES (?, ?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5, $6)`,
 		word.CategoryID, word.Kazakh, word.Russian, word.Transcription, word.ExampleKK, word.ExampleRU)
-	if err != nil {
-		return domain.Word{}, err
-	}
-	id, err := res.LastInsertId()
 	if err != nil {
 		return domain.Word{}, err
 	}
@@ -73,8 +69,8 @@ func (r *WordRepo) Create(ctx context.Context, word domain.Word) (domain.Word, e
 func (r *WordRepo) Update(ctx context.Context, word domain.Word) (domain.Word, error) {
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE words
-		SET category_id = ?, kazakh = ?, russian = ?, transcription = ?, example_kk = ?, example_ru = ?
-		WHERE id = ?`,
+		SET category_id = $1, kazakh = $2, russian = $3, transcription = $4, example_kk = $5, example_ru = $6
+		WHERE id = $7`,
 		word.CategoryID, word.Kazakh, word.Russian, word.Transcription, word.ExampleKK, word.ExampleRU, word.ID)
 	if err != nil {
 		return domain.Word{}, err
@@ -86,7 +82,7 @@ func (r *WordRepo) Update(ctx context.Context, word domain.Word) (domain.Word, e
 }
 
 func (r *WordRepo) Delete(ctx context.Context, id int64) error {
-	res, err := r.db.ExecContext(ctx, `DELETE FROM words WHERE id = ?`, id)
+	res, err := r.db.ExecContext(ctx, `DELETE FROM words WHERE id = $1`, id)
 	if err != nil {
 		return err
 	}

@@ -1,11 +1,11 @@
-.PHONY: run test build swagger fmt docker seed
+.PHONY: run test build swagger fmt docker db seed
 
 APP := backend/bin/qaztil
 SWAG := github.com/swaggo/swag/cmd/swag@v1.16.4
 
-# JWT_SECRET is required. The fallback is for local runs only; Render generates its own.
+# The process loads the repo .env itself. A variable already exported in the shell wins.
 run:
-	cd backend && JWT_SECRET=$${JWT_SECRET:-dev-secret-change-me-0123456789abcdef} go run .
+	cd backend && go run .
 
 test:
 	cd backend && go test ./...
@@ -22,6 +22,9 @@ swagger:
 
 docker:
 	docker compose up --build
+
+db:
+	docker compose up -d postgres
 
 seed:
 	cd backend && go run ./cmd/seed

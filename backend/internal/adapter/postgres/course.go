@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -43,7 +43,7 @@ func (r *CourseRepo) GetUnit(ctx context.Context, id int64) (domain.Unit, error)
 		SELECT u.id, u.situation_id, u.title_kk, u.title_ru, u.description, u.position,
 			(SELECT COUNT(*) FROM lessons l WHERE l.unit_id = u.id)
 		FROM units u
-		WHERE u.id = ?`, id)
+		WHERE u.id = $1`, id)
 	item, err := scanUnit(row)
 	if err != nil {
 		return domain.Unit{}, mapErr(err)
@@ -55,7 +55,7 @@ func (r *CourseRepo) ListLessons(ctx context.Context, unitID int64) ([]domain.Le
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, unit_id, title_kk, title_ru, description, position
 		FROM lessons
-		WHERE unit_id = ?
+		WHERE unit_id = $1
 		ORDER BY position, id`, unitID)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (r *CourseRepo) GetLesson(ctx context.Context, id int64) (domain.Lesson, er
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, unit_id, title_kk, title_ru, description, position
 		FROM lessons
-		WHERE id = ?`, id)
+		WHERE id = $1`, id)
 	item, err := scanLesson(row)
 	if err != nil {
 		return domain.Lesson{}, mapErr(err)
@@ -89,7 +89,7 @@ func (r *CourseRepo) ListExercises(ctx context.Context, lessonID int64) ([]domai
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, lesson_id, kind, prompt, answer, options_json, position
 		FROM exercises
-		WHERE lesson_id = ?
+		WHERE lesson_id = $1
 		ORDER BY position, id`, lessonID)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (r *CourseRepo) GetExercise(ctx context.Context, id int64) (domain.Exercise
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, lesson_id, kind, prompt, answer, options_json, position
 		FROM exercises
-		WHERE id = ?`, id)
+		WHERE id = $1`, id)
 	item, err := scanExercise(row)
 	if err != nil {
 		return domain.Exercise{}, mapErr(err)

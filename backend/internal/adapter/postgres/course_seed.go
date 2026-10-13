@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -76,21 +76,21 @@ func SeedCourse(ctx context.Context, db *sql.DB) (bool, error) {
 }
 
 func insertSituation(ctx context.Context, tx *sql.Tx, situation courseSituation, position int) (int64, error) {
-	res, err := tx.ExecContext(ctx, `
+	id, err := insertID(ctx, tx, `
 		INSERT INTO situations (slug, title_kk, title_ru, description, position)
-		VALUES (?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5)`,
 		situation.slug, situation.titleKK, situation.titleRU, situation.description, position)
 	if err != nil {
 		return 0, fmt.Errorf("seed situation %s: %w", situation.slug, err)
 	}
-	return res.LastInsertId()
+	return id, nil
 }
 
 func insertWords(ctx context.Context, tx *sql.Tx, situationID int64, words []courseWord) error {
 	for i, word := range words {
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO situation_words (situation_id, kazakh, russian, transcription, position)
-			VALUES (?, ?, ?, ?, ?)`,
+			VALUES ($1, $2, $3, $4, $5)`,
 			situationID, word.kazakh, word.russian, word.transcription, i+1); err != nil {
 			return fmt.Errorf("seed situation word %s: %w", word.kazakh, err)
 		}
@@ -99,28 +99,24 @@ func insertWords(ctx context.Context, tx *sql.Tx, situationID int64, words []cou
 }
 
 func insertUnit(ctx context.Context, tx *sql.Tx, situationID int64, situation courseSituation, position int) (int64, error) {
-	res, err := tx.ExecContext(ctx, `
+	id, err := insertID(ctx, tx, `
 		INSERT INTO units (situation_id, title_kk, title_ru, description, position)
-		VALUES (?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5)`,
 		situationID, situation.titleKK, situation.titleRU, situation.description, position)
 	if err != nil {
 		return 0, fmt.Errorf("seed unit %s: %w", situation.slug, err)
 	}
-	return res.LastInsertId()
+	return id, nil
 }
 
 func insertLessons(ctx context.Context, tx *sql.Tx, unitID int64, lessons []courseLesson) error {
 	for i, lesson := range lessons {
-		res, err := tx.ExecContext(ctx, `
+		lessonID, err := insertID(ctx, tx, `
 			INSERT INTO lessons (unit_id, title_kk, title_ru, description, position)
-			VALUES (?, ?, ?, ?, ?)`,
+			VALUES ($1, $2, $3, $4, $5)`,
 			unitID, lesson.titleKK, lesson.titleRU, lesson.description, i+1)
 		if err != nil {
 			return fmt.Errorf("seed lesson %s: %w", lesson.titleKK, err)
-		}
-		lessonID, err := res.LastInsertId()
-		if err != nil {
-			return err
 		}
 		for j, exercise := range lesson.exercises {
 			if exercise.options == nil {
@@ -132,7 +128,7 @@ func insertLessons(ctx context.Context, tx *sql.Tx, unitID int64, lessons []cour
 			}
 			if _, err := tx.ExecContext(ctx, `
 				INSERT INTO exercises (lesson_id, kind, prompt, answer, options_json, position)
-				VALUES (?, ?, ?, ?, ?, ?)`,
+				VALUES ($1, $2, $3, $4, $5, $6)`,
 				lessonID, exercise.kind, exercise.prompt, exercise.answer, string(raw), j+1); err != nil {
 				return fmt.Errorf("seed exercise %s: %w", exercise.prompt, err)
 			}
