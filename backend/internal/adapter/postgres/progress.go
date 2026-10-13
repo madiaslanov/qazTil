@@ -1,4 +1,4 @@
-package sqlite
+package postgres
 
 import (
 	"context"
@@ -30,15 +30,12 @@ func (r *ProgressRepo) List(ctx context.Context) ([]domain.Progress, error) {
 	for rows.Next() {
 		var (
 			item    domain.Progress
-			studied sql.NullString
+			studied sql.NullTime
 		)
 		if err := rows.Scan(&item.CategoryID, &item.TotalAnswers, &item.CorrectAnswers, &studied); err != nil {
 			return nil, err
 		}
-		item.LastStudiedAt, err = parseTime(studied)
-		if err != nil {
-			return nil, err
-		}
+		item.LastStudiedAt = timePtr(studied)
 		out = append(out, item)
 	}
 	return out, rows.Err()
@@ -51,11 +48,11 @@ func (r *ProgressRepo) Record(ctx context.Context, categoryID int64, correct boo
 	}
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO progress (category_id, total_answers, correct_answers, last_studied_at)
-		VALUES (?, 1, ?, ?)
-		ON CONFLICT(category_id) DO UPDATE SET
-			total_answers = total_answers + 1,
-			correct_answers = correct_answers + excluded.correct_answers,
-			last_studied_at = excluded.last_studied_at`,
-		categoryID, increment, formatTime(at))
+		VALUES ($1, 1, $2, $3)
+		ON CONFLICT (category_id) DO UPDATE SET
+			total_answers = progress.total_answers + 1,
+			correct_answers = progress.correct_answers + EXCLUDED.correct_answers,
+			last_studied_at = EXCLUDED.last_studied_at`,
+		categoryID, increment, at.UTC())
 	return err
 }

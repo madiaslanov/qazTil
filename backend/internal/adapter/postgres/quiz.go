@@ -1,10 +1,9 @@
-package sqlite
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"time"
 
 	"github.com/madiaslanov/qazTil/internal/domain"
 )
@@ -24,13 +23,9 @@ func (r *QuizRepo) Create(ctx context.Context, quiz domain.Quiz) (domain.Quiz, e
 	}
 	defer rollback(tx)
 
-	res, err := tx.ExecContext(ctx, `
+	id, err := insertID(ctx, tx, `
 		INSERT INTO quizzes (category_id, created_at, finished_at)
-		VALUES (?, ?, ?)`, quiz.CategoryID, formatTime(quiz.CreatedAt), formatTimePtr(quiz.FinishedAt))
-	if err != nil {
-		return domain.Quiz{}, err
-	}
-	id, err := res.LastInsertId()
+		VALUES ($1, $2, $3)`, quiz.CategoryID, quiz.CreatedAt.UTC(), quiz.FinishedAt)
 	if err != nil {
 		return domain.Quiz{}, err
 	}
@@ -40,9 +35,9 @@ func (r *QuizRepo) Create(ctx context.Context, quiz domain.Quiz) (domain.Quiz, e
 		if err != nil {
 			return domain.Quiz{}, err
 		}
-		res, err = tx.ExecContext(ctx, `
+		qid, err := insertID(ctx, tx, `
 			INSERT INTO quiz_questions (quiz_id, word_id, prompt, options_json, correct_index, selected_index, correct)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 			quiz.ID,
 			quiz.Questions[i].WordID,
 			quiz.Questions[i].Prompt,
@@ -51,10 +46,6 @@ func (r *QuizRepo) Create(ctx context.Context, quiz domain.Quiz) (domain.Quiz, e
 			nullInt(quiz.Questions[i].SelectedIndex),
 			nullBool(quiz.Questions[i].Correct),
 		)
-		if err != nil {
-			return domain.Quiz{}, err
-		}
-		qid, err := res.LastInsertId()
 		if err != nil {
 			return domain.Quiz{}, err
 		}
@@ -69,29 +60,22 @@ func (r *QuizRepo) Create(ctx context.Context, quiz domain.Quiz) (domain.Quiz, e
 func (r *QuizRepo) Get(ctx context.Context, id int64) (domain.Quiz, error) {
 	var (
 		quiz     domain.Quiz
-		created  string
-		finished sql.NullString
+		finished sql.NullTime
 	)
 	err := r.db.QueryRowContext(ctx, `
 		SELECT id, category_id, created_at, finished_at
 		FROM quizzes
-		WHERE id = ?`, id).Scan(&quiz.ID, &quiz.CategoryID, &created, &finished)
+		WHERE id = $1`, id).Scan(&quiz.ID, &quiz.CategoryID, &quiz.CreatedAt, &finished)
 	if err != nil {
 		return domain.Quiz{}, mapErr(err)
 	}
-	quiz.CreatedAt, err = time.Parse(time.RFC3339Nano, created)
-	if err != nil {
-		return domain.Quiz{}, err
-	}
-	quiz.FinishedAt, err = parseTime(finished)
-	if err != nil {
-		return domain.Quiz{}, err
-	}
+	quiz.CreatedAt = quiz.CreatedAt.UTC()
+	quiz.FinishedAt = timePtr(finished)
 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, word_id, prompt, options_json, correct_index, selected_index, correct
 		FROM quiz_questions
-		WHERE quiz_id = ?
+		WHERE quiz_id = $1
 		ORDER BY id`, id)
 	if err != nil {
 		return domain.Quiz{}, err
@@ -104,7 +88,7 @@ func (r *QuizRepo) Get(ctx context.Context, id int64) (domain.Quiz, error) {
 			question domain.QuizQuestion
 			raw      string
 			selected sql.NullInt64
-			correct  sql.NullInt64
+			correct  sql.NullBool
 		)
 		if err := rows.Scan(&question.ID, &question.WordID, &question.Prompt, &raw, &question.CorrectIndex, &selected, &correct); err != nil {
 			return domain.Quiz{}, err
@@ -117,7 +101,7 @@ func (r *QuizRepo) Get(ctx context.Context, id int64) (domain.Quiz, error) {
 			question.SelectedIndex = &value
 		}
 		if correct.Valid {
-			value := correct.Int64 != 0
+			value := correct.Bool
 			question.Correct = &value
 		}
 		quiz.Questions = append(quiz.Questions, question)
@@ -134,8 +118,8 @@ func (r *QuizRepo) Save(ctx context.Context, quiz domain.Quiz) error {
 
 	res, err := tx.ExecContext(ctx, `
 		UPDATE quizzes
-		SET finished_at = ?
-		WHERE id = ?`, formatTimePtr(quiz.FinishedAt), quiz.ID)
+		SET finished_at = $1
+		WHERE id = $2`, quiz.FinishedAt, quiz.ID)
 	if err != nil {
 		return err
 	}
@@ -145,8 +129,8 @@ func (r *QuizRepo) Save(ctx context.Context, quiz domain.Quiz) error {
 	for _, question := range quiz.Questions {
 		if _, err := tx.ExecContext(ctx, `
 			UPDATE quiz_questions
-			SET selected_index = ?, correct = ?
-			WHERE id = ? AND quiz_id = ?`,
+			SET selected_index = $1, correct = $2
+			WHERE id = $3 AND quiz_id = $4`,
 			nullInt(question.SelectedIndex), nullBool(question.Correct), question.ID, quiz.ID); err != nil {
 			return err
 		}

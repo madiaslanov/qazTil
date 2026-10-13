@@ -1,9 +1,8 @@
-package sqlite
+package postgres
 
 import (
 	"context"
 	"database/sql"
-	"strings"
 
 	"github.com/madiaslanov/qazTil/internal/domain"
 )
@@ -17,10 +16,11 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 }
 
 func (r *UserRepo) Create(ctx context.Context, user domain.User) (domain.User, error) {
-	res, err := r.db.ExecContext(ctx, `
+	created, err := r.get(ctx, `
 		INSERT INTO users (email, password_hash, display_name, created_at)
-		VALUES (?, ?, ?, ?)`,
-		user.Email, user.PasswordHash, user.DisplayName, formatTime(user.CreatedAt))
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, email, password_hash, display_name, created_at`,
+		user.Email, user.PasswordHash, user.DisplayName, user.CreatedAt.UTC())
 	if err != nil {
 		// Two parallel registrations can both pass the "is the email free" check,
 		// so the UNIQUE index is the real guard and this maps it to a domain error.
@@ -29,45 +29,30 @@ func (r *UserRepo) Create(ctx context.Context, user domain.User) (domain.User, e
 		}
 		return domain.User{}, err
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return domain.User{}, err
-	}
-	return r.GetByID(ctx, id)
+	return created, nil
 }
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (domain.User, error) {
-	return r.get(ctx, "email = ?", email)
+	return r.get(ctx, `
+		SELECT id, email, password_hash, display_name, created_at
+		FROM users
+		WHERE email = $1`, email)
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id int64) (domain.User, error) {
-	return r.get(ctx, "id = ?", id)
-}
-
-func (r *UserRepo) get(ctx context.Context, where string, arg any) (domain.User, error) {
-	var (
-		user    domain.User
-		created sql.NullString
-	)
-	err := r.db.QueryRowContext(ctx, `
+	return r.get(ctx, `
 		SELECT id, email, password_hash, display_name, created_at
 		FROM users
-		WHERE `+where, arg).
-		Scan(&user.ID, &user.Email, &user.PasswordHash, &user.DisplayName, &created)
+		WHERE id = $1`, id)
+}
+
+func (r *UserRepo) get(ctx context.Context, query string, args ...any) (domain.User, error) {
+	var user domain.User
+	err := r.db.QueryRowContext(ctx, query, args...).
+		Scan(&user.ID, &user.Email, &user.PasswordHash, &user.DisplayName, &user.CreatedAt)
 	if err != nil {
 		return domain.User{}, mapErr(err)
 	}
-	parsed, err := parseTime(created)
-	if err != nil {
-		return domain.User{}, err
-	}
-	if parsed != nil {
-		user.CreatedAt = *parsed
-	}
+	user.CreatedAt = user.CreatedAt.UTC()
 	return user, nil
-}
-
-// isUniqueViolation keeps the driver's wording in the adapter layer.
-func isUniqueViolation(err error) bool {
-	return strings.Contains(strings.ToLower(err.Error()), "unique constraint failed")
 }

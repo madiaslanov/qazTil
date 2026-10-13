@@ -1,3 +1,10 @@
+databases:
+  - name: qaztil-db
+    databaseName: qaztil
+    user: qaztil
+    plan: free
+    postgresMajorVersion: "16"
+
 services:
   - type: web
     name: qaztil
@@ -7,13 +14,11 @@ services:
     startCommand: ./app
     healthCheckPath: /health
     envVars:
-      - key: DB_PATH
-        value: /var/data/qaztil.db
+      - key: DATABASE_URL
+        fromDatabase:
+          name: qaztil-db
+          property: connectionString
       - key: ALLOWED_ORIGINS
         value: https://qaz-til.vercel.app,http://localhost:3000
       - key: JWT_SECRET
         generateValue: true
-    disk:
-      name: qaztil-data
-      mountPath: /var/data
-      sizeGB: 1

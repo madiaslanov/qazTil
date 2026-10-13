@@ -13,8 +13,9 @@ import (
 	"time"
 
 	httpapi "github.com/madiaslanov/qazTil/internal/adapter/http"
+	"github.com/madiaslanov/qazTil/internal/adapter/postgres"
 	"github.com/madiaslanov/qazTil/internal/adapter/security"
-	"github.com/madiaslanov/qazTil/internal/adapter/sqlite"
+	appconfig "github.com/madiaslanov/qazTil/internal/config"
 	"github.com/madiaslanov/qazTil/internal/usecase"
 )
 
@@ -29,7 +30,20 @@ import (
 // @name Authorization
 // @description Токен из /auth/login в виде "Bearer <token>"
 func main() {
+	appconfig.LoadDotEnv()
+	// Local `make run` used to inject this when the shell had no secret.
+	// A value from .env or the real environment is left in place.
+	// PORT is set on Render, so a missing secret there still fails closed.
+	if os.Getenv("JWT_SECRET") == "" && os.Getenv("PORT") == "" {
+		log.Print("JWT_SECRET is empty; using the local development secret")
+		if err := os.Setenv("JWT_SECRET", devJWTSecret); err != nil {
+			log.Fatal(err)
+		}
+	}
 	cfg := loadConfig()
+	if cfg.databaseURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
 	if len(cfg.jwtSecret) < minSecretLen {
 		log.Fatalf("JWT_SECRET must be at least %d characters", minSecretLen)
 	}
@@ -39,24 +53,24 @@ func main() {
 		}
 	}
 
-	db, err := sqlite.Open(cfg.dbPath)
+	db, err := postgres.Open(cfg.databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	ctx := context.Background()
-	if err := sqlite.Migrate(ctx, db); err != nil {
+	if err := postgres.Migrate(ctx, db); err != nil {
 		log.Fatal(err)
 	}
-	seeded, err := sqlite.Seed(ctx, db)
+	seeded, err := postgres.Seed(ctx, db)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if seeded {
 		log.Print("seeded starter vocabulary")
 	}
-	courseSeeded, err := sqlite.SeedCourse(ctx, db)
+	courseSeeded, err := postgres.SeedCourse(ctx, db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,13 +78,13 @@ func main() {
 		log.Print("seeded situations, units, lessons and exercises")
 	}
 
-	categories := sqlite.NewCategoryRepo(db)
-	words := sqlite.NewWordRepo(db)
-	quizzes := sqlite.NewQuizRepo(db)
-	progress := sqlite.NewProgressRepo(db)
-	situations := sqlite.NewSituationRepo(db)
-	course := sqlite.NewCourseRepo(db)
-	users := sqlite.NewUserRepo(db)
+	categories := postgres.NewCategoryRepo(db)
+	words := postgres.NewWordRepo(db)
+	quizzes := postgres.NewQuizRepo(db)
+	progress := postgres.NewProgressRepo(db)
+	situations := postgres.NewSituationRepo(db)
+	course := postgres.NewCourseRepo(db)
+	users := postgres.NewUserRepo(db)
 
 	tokens := security.NewJWTIssuer(cfg.jwtSecret, cfg.jwtTTL)
 	hasher := security.NewBcryptHasher(cfg.bcryptCost)
@@ -124,25 +138,28 @@ func main() {
 // minSecretLen keeps a throwaway JWT_SECRET out of a deployed service.
 const minSecretLen = 32
 
+// devJWTSecret is only for a local process that has neither .env nor JWT_SECRET.
+const devJWTSecret = "dev-secret-change-me-0123456789abcdef"
+
 type config struct {
-	addr       string
-	dbPath     string
-	webDir     string
-	origins    []string
-	jwtSecret  string
-	jwtTTL     time.Duration
-	bcryptCost int
+	addr        string
+	databaseURL string
+	webDir      string
+	origins     []string
+	jwtSecret   string
+	jwtTTL      time.Duration
+	bcryptCost  int
 }
 
 func loadConfig() config {
 	return config{
-		addr:       listenAddr(),
-		dbPath:     env("DB_PATH", "data/qaztil.db"),
-		webDir:     env("WEB_DIR", ""),
-		origins:    allowedOrigins(),
-		jwtSecret:  os.Getenv("JWT_SECRET"),
-		jwtTTL:     durationEnv("JWT_TTL", security.DefaultTokenTTL),
-		bcryptCost: intEnv("BCRYPT_COST", 0),
+		addr:        listenAddr(),
+		databaseURL: os.Getenv("DATABASE_URL"),
+		webDir:      env("WEB_DIR", ""),
+		origins:     allowedOrigins(),
+		jwtSecret:   os.Getenv("JWT_SECRET"),
+		jwtTTL:      durationEnv("JWT_TTL", security.DefaultTokenTTL),
+		bcryptCost:  intEnv("BCRYPT_COST", 0),
 	}
 }
 
