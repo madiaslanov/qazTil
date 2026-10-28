@@ -179,3 +179,10 @@ CREATE TABLE IF NOT EXISTS user_exercise_answers (
 CREATE INDEX IF NOT EXISTS idx_answers_user_wrong
     ON user_exercise_answers(user_id, answered_at DESC) WHERE correct = false;
 
+ALTER TABLE units ADD COLUMN IF NOT EXISTS level TEXT NOT NULL DEFAULT 'A0'
+    CHECK (level IN ('A0', 'A1', 'A2', 'B1', 'B2'));
+
+ALTER TABLE units ADD COLUMN IF NOT EXISTS topic TEXT
+    CHECK (topic IN ('work', 'study', 'life'));
+
+CREATE INDEX IF NOT EXISTS idx_units_level ON units(level, position);
