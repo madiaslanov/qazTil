@@ -105,3 +105,28 @@ CREATE TABLE IF NOT EXISTS exercises (
 );
 
 CREATE INDEX IF NOT EXISTS idx_exercises_lesson ON exercises(lesson_id, position);
+
+-- QAZ-19. Онбординг, прохождение уроков и геймификация.
+--
+-- Уровни и статусы заданы через TEXT + CHECK, а не через ENUM. Migrate режет
+-- этот файл по точке с запятой и выполняет куски по отдельности, поэтому
+-- блоки DO тут использовать нельзя. Заодно совпадает со стилем таблиц выше.
+--
+-- Решения команды (TSIS 6-7, раздел 7 "Planning Poker Log"):
+--   * диалоги линейные, одна точка возобновления на урок,
+--   * сердца фиксированы на попытку, без таймера восстановления.
+-- Поэтому сердца лежат в user_lessons, а не в user_stats.
+
+CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    start_level TEXT NOT NULL DEFAULT 'A0'
+        CHECK (start_level IN ('A0', 'A1', 'A2', 'B1', 'B2')),
+    motivation TEXT NOT NULL DEFAULT 'life'
+        CHECK (motivation IN ('work', 'study', 'life')),
+    daily_goal_xp INTEGER NOT NULL DEFAULT 10
+        CHECK (daily_goal_xp BETWEEN 1 AND 200),
+    timezone TEXT NOT NULL DEFAULT 'Asia/Almaty',
+    onboarded_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
