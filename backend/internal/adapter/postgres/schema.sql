@@ -130,3 +130,20 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS user_stats (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    xp_total INTEGER NOT NULL DEFAULT 0 CHECK (xp_total >= 0),
+    streak_current INTEGER NOT NULL DEFAULT 0 CHECK (streak_current >= 0),
+    streak_best INTEGER NOT NULL DEFAULT 0 CHECK (streak_best >= 0),
+    last_lesson_date DATE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS user_daily_activity (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    activity_date DATE NOT NULL,
+    xp_earned INTEGER NOT NULL DEFAULT 0 CHECK (xp_earned >= 0),
+    lessons_completed INTEGER NOT NULL DEFAULT 0 CHECK (lessons_completed >= 0),
+    PRIMARY KEY (user_id, activity_date)
+);
+
