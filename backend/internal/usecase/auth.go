@@ -28,18 +28,25 @@ type Session struct {
 
 // AuthService registers learners and issues access tokens.
 type AuthService struct {
-	users  domain.UserRepository
-	hasher domain.PasswordHasher
-	tokens domain.TokenIssuer
-	now    func() time.Time
+	users    domain.UserRepository
+	profiles domain.ProfileRepository
+	hasher   domain.PasswordHasher
+	tokens   domain.TokenIssuer
+	now      func() time.Time
 }
 
-func NewAuthService(users domain.UserRepository, hasher domain.PasswordHasher, tokens domain.TokenIssuer) *AuthService {
-	return &AuthService{users: users, hasher: hasher, tokens: tokens, now: time.Now}
+func NewAuthService(
+	users domain.UserRepository,
+	profiles domain.ProfileRepository,
+	hasher domain.PasswordHasher,
+	tokens domain.TokenIssuer,
+) *AuthService {
+	return &AuthService{users: users, profiles: profiles, hasher: hasher, tokens: tokens, now: time.Now}
 }
 
-// Register creates a learner and signs them in straight away.
-func (s *AuthService) Register(ctx context.Context, email, password, displayName string) (Session, error) {
+// Register creates a learner, stores onboarding prefs and signs them in.
+// Empty prefs fall back to DefaultProfilePrefs.
+func (s *AuthService) Register(ctx context.Context, email, password, displayName string, prefs domain.ProfilePrefs) (Session, error) {
 	email = normalizeEmail(email)
 	if err := validateCredentials(email, password); err != nil {
 		return Session{}, err
@@ -49,6 +56,12 @@ func (s *AuthService) Register(ctx context.Context, email, password, displayName
 		displayName = nameFromEmail(email)
 	}
 	if utf8.RuneCountInString(displayName) > maxDisplayNameRune {
+		return Session{}, domain.ErrInvalid
+	}
+	if prefs == (domain.ProfilePrefs{}) {
+		prefs = domain.DefaultProfilePrefs()
+	}
+	if !prefs.Valid() {
 		return Session{}, domain.ErrInvalid
 	}
 
@@ -70,6 +83,9 @@ func (s *AuthService) Register(ctx context.Context, email, password, displayName
 		CreatedAt:    s.now().UTC(),
 	})
 	if err != nil {
+		return Session{}, err
+	}
+	if err := s.profiles.Save(ctx, user.ID, prefs); err != nil {
 		return Session{}, err
 	}
 	return s.session(user)

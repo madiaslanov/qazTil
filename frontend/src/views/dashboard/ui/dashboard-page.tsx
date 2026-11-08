@@ -7,6 +7,7 @@ import { categoryQueries, type Category } from "@/entities/category";
 import {
   levelAt,
   levelTitle,
+  profileQueries,
   useLearnerStore,
   useLives,
 } from "@/entities/learner";
@@ -20,7 +21,8 @@ import { PathGlows } from "./path-glows";
 /** Путь обучения: категории из API выстроены цепочкой уроков. */
 export function DashboardPage() {
   const learner = useLearnerStore((state) => state.learner);
-  const { lives } = useLives();
+  const profile = useQuery(profileQueries.current());
+  const { lives, pending: livesPending } = useLives();
   const categories = useQuery(categoryQueries.all());
   const [preview, setPreview] = useState<{
     category: Category;
@@ -29,7 +31,7 @@ export function DashboardPage() {
   const [noLivesOpen, setNoLivesOpen] = useState(false);
 
   const completedIds = learner?.completedCategoryIds ?? [];
-  const startLevel = learner?.level ?? "A1";
+  const startLevel = profile.data?.level ?? "A1";
   const currentIndex = Math.max(
     0,
     categories.data?.findIndex(
@@ -42,7 +44,7 @@ export function DashboardPage() {
   );
 
   function select(category: Category, index: number) {
-    if (lives === 0) setNoLivesOpen(true);
+    if (!livesPending && lives === 0) setNoLivesOpen(true);
     else setPreview({ category, index });
   }
 

@@ -20,4 +20,7 @@ export type LoginPayload = {
 
 export type RegisterPayload = LoginPayload & {
   display_name: string;
+  daily_goal?: 5 | 10 | 15;
+  level?: "A0" | "A1" | "A2";
+  motivation?: "work" | "study" | "life";
 };

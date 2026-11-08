@@ -24,7 +24,10 @@ type API struct {
 	progress   *usecase.ProgressService
 	situations *usecase.SituationService
 	course     *usecase.CourseService
+	path       *usecase.PathService
+	attempts   *usecase.AttemptService
 	auth       *usecase.AuthService
+	profile    *usecase.ProfileService
 	tokens     domain.TokenIssuer
 	webDir     string
 	origins    []string
@@ -37,7 +40,10 @@ func NewAPI(
 	progress *usecase.ProgressService,
 	situations *usecase.SituationService,
 	course *usecase.CourseService,
+	path *usecase.PathService,
+	attempts *usecase.AttemptService,
 	auth *usecase.AuthService,
+	profile *usecase.ProfileService,
 	tokens domain.TokenIssuer,
 	webDir string,
 	origins []string,
@@ -49,7 +55,10 @@ func NewAPI(
 		progress:   progress,
 		situations: situations,
 		course:     course,
+		path:       path,
+		attempts:   attempts,
 		auth:       auth,
+		profile:    profile,
 		tokens:     tokens,
 		webDir:     webDir,
 		origins:    origins,
@@ -97,18 +106,22 @@ func NewHandler(api *API, ready func(context.Context) error, webDir string) http
 		r.Get("/quizzes/{id}", api.GetQuiz)
 		r.Post("/quizzes/{id}/answers", api.AnswerQuiz)
 
-		r.Get("/progress", api.ListProgress)
+		r.With(api.RequireUser).Get("/progress", api.ListProgress)
+		r.With(api.RequireUser).Get("/me/stats", api.Stats)
+		r.With(api.RequireUser).Get("/me/profile", api.GetProfile)
+		r.With(api.RequireUser).Put("/me/profile", api.UpdateProfile)
 
 		r.Get("/situations", api.ListSituations)
 		r.Get("/situations/{id}", api.GetSituation)
 		r.Get("/situations/{id}/words", api.ListSituationWords)
 
+		r.With(api.RequireUser).Get("/path", api.GetPath)
 		r.Get("/units", api.ListUnits)
 		r.Get("/units/{id}", api.GetUnit)
 		r.Get("/units/{id}/lessons", api.ListLessons)
 		r.Get("/lessons/{id}", api.GetLesson)
 		r.Get("/lessons/{id}/exercises", api.ListExercises)
-		r.Post("/exercises/{id}/answers", api.AnswerExercise)
+		r.With(api.RequireUser).Post("/exercises/{id}/answers", api.AnswerExercise)
 	})
 
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))

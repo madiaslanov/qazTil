@@ -1,8 +1,17 @@
-export type Progress = {
-  category_id: number;
-  category_name_kk: string;
-  category_name_ru: string;
-  total_answers: number;
-  correct_answers: number;
-  last_studied_at?: string;
+export type LessonProgress = {
+  lesson_id: number;
+  completed: boolean;
+  correct: number;
+  total: number;
+};
+
+export type UnitProgress = {
+  unit_id: number;
+  completed_lessons: number;
+  total_lessons: number;
+};
+
+export type CourseProgress = {
+  lessons: LessonProgress[];
+  units: UnitProgress[];
 };

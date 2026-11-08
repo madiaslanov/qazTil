@@ -39,13 +39,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace("/");
       return;
     }
-    // Локальный профиль могли стереть отдельно от сессии — заводим заново.
+    // Локальный прогресс могли стереть отдельно от сессии — заводим заново.
     if (learner?.email !== session.user.email) {
-      createLearner(session.user.email, {
-        dailyGoal: learner?.dailyGoal ?? 10,
-        level: learner?.level,
-        motivation: learner?.motivation,
-      });
+      createLearner(session.user.email);
     }
   }, [hydrated, session, learner, createLearner, router]);
 

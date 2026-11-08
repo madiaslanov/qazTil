@@ -4,7 +4,7 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "API для изучения казахского языка: категории, словарь, квиз и прогресс.",
+        "description": "API для изучения казахского языка: категории, словарь, ситуации, путь обучения, юниты, уроки, упражнения, квиз, прогресс и профиль ученика.",
         "title": "qazTil API",
         "contact": {},
         "version": "1.0"
@@ -12,6 +12,126 @@
     "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
+        "/auth/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Вход",
+                "parameters": [
+                    {
+                        "description": "Почта и пароль",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SessionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Текущий пользователь",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Регистрация",
+                "parameters": [
+                    {
+                        "description": "Почта и пароль",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/SessionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/categories": {
             "get": {
                 "produces": [
@@ -199,27 +319,327 @@
                 }
             }
         },
-        "/progress": {
+        "/exercises/{id}/answers": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "course"
+                ],
+                "summary": "Проверить ответ на упражнение",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID упражнения",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Ответ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ExerciseAnswerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ExerciseAnswerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/lessons/{id}": {
+            "get": {
+                "description": "Правильный ответ в упражнение не входит. Его возвращает проверка.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "course"
+                ],
+                "summary": "Урок и его упражнения",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/LessonDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/lessons/{id}/exercises": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "progress"
+                    "course"
                 ],
-                "summary": "Прогресс по категориям",
+                "summary": "Упражнения урока",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID урока",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ProgressResponse"
+                                "$ref": "#/definitions/ExerciseResponse"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Профиль ученика",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ProfileResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Обновить профиль",
+                "parameters": [
+                    {
+                        "description": "Поля для изменения",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ProfileUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress"
+                ],
+                "summary": "Опыт, жизни и стрик",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/StatsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/path": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Юниты с уроками и статусами completed/current/locked для текущего ученика.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "course"
+                ],
+                "summary": "Путь обучения",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PathResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/progress": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "progress"
+                ],
+                "summary": "Прогресс по урокам и модулям",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ProgressResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -365,6 +785,228 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/situations": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "situations"
+                ],
+                "summary": "Список ситуаций",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SituationResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/situations/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "situations"
+                ],
+                "summary": "Ситуация и её слова",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SituationDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/situations/{id}/words": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "situations"
+                ],
+                "summary": "Слова выбранной ситуации",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID ситуации",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SituationWordResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "course"
+                ],
+                "summary": "Список юнитов",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UnitResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "course"
+                ],
+                "summary": "Юнит и его уроки",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/UnitDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/units/{id}/lessons": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "course"
+                ],
+                "summary": "Уроки юнита",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID юнита",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/LessonResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
                         }
@@ -645,37 +1287,372 @@
         "ErrorResponse": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "no_lives"
+                },
                 "error": {
                     "type": "string",
                     "example": "не найдено"
                 }
             }
         },
-        "ProgressResponse": {
+        "ExerciseAnswerRequest": {
             "type": "object",
             "properties": {
-                "category_id": {
+                "answer": {
+                    "type": "string",
+                    "example": "Рақмет"
+                }
+            }
+        },
+        "ExerciseAnswerResponse": {
+            "type": "object",
+            "properties": {
+                "correct": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "expected": {
+                    "type": "string",
+                    "example": "Рақмет"
+                }
+            }
+        },
+        "ExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
                     "type": "integer",
                     "example": 1
                 },
-                "category_name_kk": {
+                "kind": {
                     "type": "string",
-                    "example": "Сәлемдесу"
+                    "enum": [
+                        "choice",
+                        "translate"
+                    ],
+                    "example": "choice"
                 },
-                "category_name_ru": {
+                "lesson_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "prompt": {
                     "type": "string",
-                    "example": "Приветствия"
+                    "example": "Спасибо"
+                }
+            }
+        },
+        "LessonDetailResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Как попросить меню"
                 },
-                "correct_answers": {
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ExerciseResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Тапсырыс"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "Заказ"
+                },
+                "unit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "LessonProgressResponse": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "correct": {
+                    "type": "integer",
+                    "example": 6
+                },
+                "lesson_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 7
+                }
+            }
+        },
+        "LessonResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Как попросить меню"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Тапсырыс"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "Заказ"
+                },
+                "unit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "aidana@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "qazaqtili2026"
+                }
+            }
+        },
+        "PathLessonResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Как попросить меню"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "state": {
+                    "type": "string",
+                    "enum": [
+                        "completed",
+                        "current",
+                        "locked"
+                    ],
+                    "example": "current"
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Тапсырыс"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "Заказ"
+                },
+                "unit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "PathResponse": {
+            "type": "object",
+            "properties": {
+                "current_lesson_id": {
+                    "type": "integer"
+                },
+                "units": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PathUnitResponse"
+                    }
+                }
+            }
+        },
+        "PathUnitResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Заказ и счёт"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lesson_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PathLessonResponse"
+                    }
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "situation_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Дәмхана"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "В кафе"
+                }
+            }
+        },
+        "ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "daily_goal": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "display_name": {
+                    "type": "string",
+                    "example": "Айдана"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "aidana@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_lesson_on": {
+                    "type": "string",
+                    "example": "2026-10-10"
+                },
+                "level": {
+                    "type": "string",
+                    "enum": [
+                        "A0",
+                        "A1",
+                        "A2"
+                    ],
+                    "example": "A0"
+                },
+                "lives": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "max_lives": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "motivation": {
+                    "type": "string",
+                    "enum": [
+                        "work",
+                        "study",
+                        "life"
+                    ],
+                    "example": "life"
+                },
+                "next_life_at": {
+                    "type": "string"
+                },
+                "streak": {
                     "type": "integer",
                     "example": 3
                 },
-                "last_studied_at": {
-                    "type": "string"
-                },
-                "total_answers": {
+                "xp": {
                     "type": "integer",
-                    "example": 4
+                    "example": 120
+                }
+            }
+        },
+        "ProfileUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "daily_goal": {
+                    "type": "integer",
+                    "example": 15
+                },
+                "display_name": {
+                    "type": "string",
+                    "example": "Айдана"
+                },
+                "level": {
+                    "type": "string",
+                    "enum": [
+                        "A0",
+                        "A1",
+                        "A2"
+                    ],
+                    "example": "A1"
+                },
+                "motivation": {
+                    "type": "string",
+                    "enum": [
+                        "work",
+                        "study",
+                        "life"
+                    ],
+                    "example": "work"
+                }
+            }
+        },
+        "ProgressResponse": {
+            "type": "object",
+            "properties": {
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/LessonProgressResponse"
+                    }
+                },
+                "units": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UnitProgressResponse"
+                    }
                 }
             }
         },
@@ -735,6 +1712,45 @@
                 }
             }
         },
+        "RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "daily_goal": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "display_name": {
+                    "type": "string",
+                    "example": "Айдана"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "aidana@example.com"
+                },
+                "level": {
+                    "type": "string",
+                    "enum": [
+                        "A0",
+                        "A1",
+                        "A2"
+                    ],
+                    "example": "A0"
+                },
+                "motivation": {
+                    "type": "string",
+                    "enum": [
+                        "work",
+                        "study",
+                        "life"
+                    ],
+                    "example": "life"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "qazaqtili2026"
+                }
+            }
+        },
         "ScoreResponse": {
             "type": "object",
             "properties": {
@@ -748,6 +1764,122 @@
                 }
             }
         },
+        "SessionResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiJ9..."
+                },
+                "user": {
+                    "$ref": "#/definitions/UserResponse"
+                }
+            }
+        },
+        "SituationDetailResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Заказ и счёт"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "cafe"
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Дәмхана"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "В кафе"
+                },
+                "word_count": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "words": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SituationWordResponse"
+                    }
+                }
+            }
+        },
+        "SituationResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Заказ и счёт"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "slug": {
+                    "type": "string",
+                    "example": "cafe"
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Дәмхана"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "В кафе"
+                },
+                "word_count": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "SituationWordResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "kazakh": {
+                    "type": "string",
+                    "example": "Рақмет"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "russian": {
+                    "type": "string",
+                    "example": "Спасибо"
+                },
+                "situation_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "transcription": {
+                    "type": "string",
+                    "example": "raqmet"
+                }
+            }
+        },
         "StartQuizRequest": {
             "type": "object",
             "properties": {
@@ -758,6 +1890,143 @@
                 "size": {
                     "type": "integer",
                     "example": 5
+                }
+            }
+        },
+        "StatsResponse": {
+            "type": "object",
+            "properties": {
+                "last_lesson_on": {
+                    "type": "string",
+                    "example": "2026-10-10"
+                },
+                "lives": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "max_lives": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "next_life_at": {
+                    "type": "string"
+                },
+                "streak": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "xp": {
+                    "type": "integer",
+                    "example": 120
+                }
+            }
+        },
+        "UnitDetailResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Заказ и счёт"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lesson_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/LessonResponse"
+                    }
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "situation_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Дәмхана"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "В кафе"
+                }
+            }
+        },
+        "UnitProgressResponse": {
+            "type": "object",
+            "properties": {
+                "completed_lessons": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "total_lessons": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "unit_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "UnitResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Заказ и счёт"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "lesson_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "situation_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title_kk": {
+                    "type": "string",
+                    "example": "Дәмхана"
+                },
+                "title_ru": {
+                    "type": "string",
+                    "example": "В кафе"
+                }
+            }
+        },
+        "UserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string",
+                    "example": "Айдана"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "aidana@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -822,6 +2091,14 @@
                     "example": "sälem"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Токен из /auth/login в виде \"Bearer \u003ctoken\u003e\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

@@ -40,8 +40,9 @@ cd frontend && npm install && npm run dev
 - `POST /quizzes` — тело `{"category_id": 1, "size": 5}`, в ответе русское слово и четыре казахских варианта
 - `POST /quizzes/{id}/answers` — тело `{"question_id": 1, "selected_index": 0}`
 - `GET /quizzes/{id}` — счёт
-- `GET /progress` — ответы по каждой категории
+- `GET /progress` — прогресс по урокам и модулям из попыток. `GET /me/stats` — опыт, жизни и стрик
 - `GET /situations`, `GET /situations/{id}` — ситуация и её слова, отдельно `GET /situations/{id}/words`
+- `GET /path` — путь обучения: юниты с уроками и статусами `completed` / `current` / `locked`
 - `GET /units`, `GET /units/{id}` — юнит и его уроки, отдельно `GET /units/{id}/lessons`
 - `GET /lessons/{id}` — урок и упражнения без правильного ответа, отдельно `GET /lessons/{id}/exercises`
 - `POST /exercises/{id}/answers` — тело `{"answer": "Рақмет"}`, в ответе `correct` и ожидаемая строка

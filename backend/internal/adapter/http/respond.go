@@ -40,6 +40,9 @@ func writeErr(w http.ResponseWriter, err error) {
 		status, message = http.StatusUnauthorized, "неверная почта или пароль"
 	case errors.Is(err, domain.ErrUnauthorized):
 		status, message = http.StatusUnauthorized, "нужна авторизация"
+	case errors.Is(err, domain.ErrNoLives):
+		writeJSON(w, http.StatusConflict, ErrorResponse{Error: "нет жизней", Code: "no_lives"})
+		return
 	default:
 		log.Printf("api error: %v", err)
 	}

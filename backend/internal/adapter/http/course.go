@@ -132,11 +132,19 @@ func (a *API) ListExercises(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path int true "ID упражнения"
 // @Param body body ExerciseAnswerRequest true "Ответ"
+// @Security BearerAuth
 // @Success 200 {object} ExerciseAnswerResponse
 // @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
 // @Router /exercises/{id}/answers [post]
 func (a *API) AnswerExercise(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserID(r.Context())
+	if !ok {
+		writeErr(w, domain.ErrUnauthorized)
+		return
+	}
 	id, err := pathID(r)
 	if err != nil {
 		writeErr(w, err)
@@ -147,7 +155,7 @@ func (a *API) AnswerExercise(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
-	result, err := a.course.Check(r.Context(), id, req.Answer)
+	result, err := a.attempts.Answer(r.Context(), userID, id, req.Answer)
 	if err != nil {
 		writeErr(w, err)
 		return

@@ -9,7 +9,7 @@ import {
   type Exercise,
   type ExerciseAnswer,
 } from "@/entities/exercise";
-import { useLearnerStore } from "@/entities/learner";
+import { profileQueries, useLearnerStore } from "@/entities/learner";
 import { progressQueries } from "@/entities/progress";
 import { quizApi, quizQueries, type Question } from "@/entities/quiz";
 import { wordQueries } from "@/entities/word";
@@ -50,7 +50,6 @@ type Result = { correct: boolean; answer: string };
  */
 export function useQuizSession(categoryId: number, size: number) {
   const queryClient = useQueryClient();
-  const loseLife = useLearnerStore((state) => state.loseLife);
   const completeLesson = useLearnerStore((state) => state.completeLesson);
 
   const options = quizQueries.session(categoryId, size);
@@ -94,7 +93,6 @@ export function useQuizSession(categoryId: number, size: number) {
         answer: question?.options[response.correct_index] ?? "",
       });
       setPhase("feedback");
-      if (!response.correct) loseLife();
     },
   });
 
@@ -120,10 +118,9 @@ export function useQuizSession(categoryId: number, size: number) {
           correct: score.correct + (checked.correct ? 1 : 0),
           total: score.total + 1,
         }));
-        if (!checked.correct) loseLife();
       }
     },
-    [loseLife, phase, step],
+    [phase, step],
   );
 
   const retry = useCallback(() => {
@@ -141,15 +138,18 @@ export function useQuizSession(categoryId: number, size: number) {
     setPhase("answering");
 
     if (index + 1 >= steps.length) {
-      completeLesson(quiz.category_id, quiz.score.correct + localScore.correct);
+      completeLesson(quiz.category_id);
       void queryClient.invalidateQueries({
         queryKey: progressQueries.all().queryKey,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: profileQueries.current().queryKey,
       });
       setFinished(true);
       return;
     }
     setIndex(index + 1);
-  }, [completeLesson, index, localScore.correct, queryClient, quiz, steps.length]);
+  }, [completeLesson, index, queryClient, quiz, steps.length]);
 
   const status = finished
     ? "finished"

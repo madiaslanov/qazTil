@@ -10,4 +10,5 @@ var (
 	ErrEmailTaken      = errors.New("email taken")
 	ErrBadCredentials  = errors.New("bad credentials")
 	ErrUnauthorized    = errors.New("unauthorized")
+	ErrNoLives         = errors.New("no lives")
 )

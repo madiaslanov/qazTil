@@ -2,13 +2,12 @@
 
 import { Flame, Heart } from "lucide-react";
 
-import { useLearnerStore, useLives } from "@/entities/learner";
+import { useLives } from "@/entities/learner";
 import { Logo } from "@/shared/ui";
 
 /** Шапка вкладок: логотип слева, страйк и жизни справа. */
 export function TopBar() {
-  const learner = useLearnerStore((state) => state.learner);
-  const { lives } = useLives();
+  const { lives, streak, pending } = useLives();
 
   return (
     <header className="flex h-bar shrink-0 items-center justify-between bg-surface px-gutter">
@@ -16,12 +15,12 @@ export function TopBar() {
       <div className="flex items-center gap-4">
         <Counter
           label="Дней подряд"
-          value={learner?.streak ?? 0}
+          value={pending ? "…" : streak}
           icon={<Flame className="size-5.5 text-streak" />}
         />
         <Counter
           label="Жизни"
-          value={lives}
+          value={pending || lives === undefined ? "…" : lives}
           icon={<Heart className="size-5.5 text-lives" />}
         />
       </div>
@@ -35,7 +34,7 @@ function Counter({
   icon,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   icon: React.ReactNode;
 }) {
   return (

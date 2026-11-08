@@ -14,3 +14,9 @@ export {
 } from "./model/levels";
 export { useLearnerStore } from "./model/store";
 export { useLives } from "./model/use-lives";
+export {
+  profileApi,
+  profileQueries,
+  type Profile,
+  type ProfileUpdate,
+} from "./api/profile-queries";

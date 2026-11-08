@@ -5,9 +5,8 @@ import { BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import type { Category } from "@/entities/category";
-import { progressQueries } from "@/entities/progress";
 import { wordQueries } from "@/entities/word";
-import { BottomSheet, Button, Eyebrow, Progress } from "@/shared/ui";
+import { BottomSheet, Button, Eyebrow } from "@/shared/ui";
 
 /** Сколько новых слов показываем в превью. */
 const PREVIEW_WORDS = 3;
@@ -33,11 +32,6 @@ export function LessonPreview({
 
 function Content({ category, index }: { category: Category; index: number }) {
   const words = useQuery(wordQueries.list(category.id));
-  const progress = useQuery(progressQueries.all());
-
-  const topic = progress.data?.find((item) => item.category_id === category.id);
-  const correct = topic?.correct_answers ?? 0;
-  const total = topic?.total_answers ?? 0;
   const preview = words.data?.slice(0, PREVIEW_WORDS) ?? [];
 
   return (
@@ -81,20 +75,6 @@ function Content({ category, index }: { category: Category; index: number }) {
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="flex flex-col gap-1.75">
-        <div className="flex justify-between text-eyebrow">
-          <span className="font-bold text-foreground">Прогресс темы</span>
-          <span className="font-extrabold text-primary">
-            {correct} из {total}
-          </span>
-        </div>
-        <Progress
-          tone="highlight"
-          value={total ? Math.round((correct / total) * 100) : 0}
-          aria-label="Верных ответов по теме"
-        />
       </div>
 
       <Button asChild>

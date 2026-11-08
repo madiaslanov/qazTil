@@ -46,6 +46,20 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (domain.User, error) {
 		WHERE id = $1`, id)
 }
 
+func (r *UserRepo) UpdateDisplayName(ctx context.Context, id int64, displayName string) (domain.User, error) {
+	res, err := r.db.ExecContext(ctx, `
+		UPDATE users
+		SET display_name = $2
+		WHERE id = $1`, id, displayName)
+	if err != nil {
+		return domain.User{}, err
+	}
+	if err := missingRow(res); err != nil {
+		return domain.User{}, err
+	}
+	return r.GetByID(ctx, id)
+}
+
 func (r *UserRepo) get(ctx context.Context, query string, args ...any) (domain.User, error) {
 	var user domain.User
 	err := r.db.QueryRowContext(ctx, query, args...).

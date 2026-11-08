@@ -17,6 +17,7 @@ export function useSignOut() {
   return () => {
     clear();
     queryClient.removeQueries({ queryKey: ["session"] });
+    queryClient.removeQueries({ queryKey: ["me"] });
     router.replace("/");
   };
 }

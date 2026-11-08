@@ -1,30 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-import { useLearnerStore } from "./store";
+import { profileQueries } from "../api/profile-queries";
 
-/** Жизни с восстановлением по таймеру и отсчёт до следующей. */
+/** Жизни с сервера. Таймер идёт по next_life_at, восстановление считает API. */
 export function useLives() {
-  const lives = useLearnerStore((state) => state.learner?.lives ?? 0);
-  const nextLifeAt = useLearnerStore((state) => state.learner?.nextLifeAt ?? null);
-  const regenerate = useLearnerStore((state) => state.regenerateLives);
+  const profile = useQuery(profileQueries.current());
   const [now, setNow] = useState(() => Date.now());
+  const nextLifeAt = profile.data?.next_life_at
+    ? Date.parse(profile.data.next_life_at)
+    : null;
+  const refreshed = useRef<number | null>(null);
 
   useEffect(() => {
     if (nextLifeAt === null) return;
-    const tick = () => {
-      const current = Date.now();
-      setNow(current);
-      regenerate(current);
-    };
-    tick();
-    const timer = setInterval(tick, 1000);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [nextLifeAt, regenerate]);
+  }, [nextLifeAt]);
+
+  useEffect(() => {
+    if (nextLifeAt === null || now < nextLifeAt) return;
+    if (refreshed.current === nextLifeAt) return;
+    refreshed.current = nextLifeAt;
+    void profile.refetch();
+  }, [nextLifeAt, now, profile]);
 
   return {
-    lives,
-    msToNextLife: nextLifeAt === null ? null : Math.max(0, nextLifeAt - now),
+    lives: profile.data?.lives,
+    pending: profile.isPending,
+    msToNextLife:
+      nextLifeAt === null ? null : Math.max(0, nextLifeAt - now),
+    xp: profile.data?.xp ?? 0,
+    streak: profile.data?.streak ?? 0,
   };
 }

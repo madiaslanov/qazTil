@@ -1,9 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useLearnerStore, type LearnerPrefs } from "@/entities/learner";
+import {
+  profileQueries,
+  useLearnerStore,
+  type LearnerPrefs,
+} from "@/entities/learner";
 import {
   sessionApi,
   useSessionStore,
@@ -15,28 +19,37 @@ type AuthRequest =
   | { mode: "login"; credentials: LoginPayload }
   | { mode: "register"; credentials: LoginPayload; prefs: LearnerPrefs };
 
-/** Вход и регистрация: сохраняем сессию, заводим профиль, ведём на путь. */
+/** Вход и регистрация: сессия в localStorage, prefs — на сервер. */
 export function useAuth() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setSession = useSessionStore((state) => state.setSession);
   const learner = useLearnerStore((state) => state.learner);
   const createLearner = useLearnerStore((state) => state.create);
 
   const mutation = useMutation({
-    // Имя не спрашиваем — Go возьмёт его из почты.
     mutationFn: (request: AuthRequest) =>
       request.mode === "register"
-        ? sessionApi.register({ ...request.credentials, display_name: "" })
+        ? sessionApi.register({
+            ...request.credentials,
+            display_name: "",
+            daily_goal: request.prefs.dailyGoal,
+            level: request.prefs.level,
+            motivation: request.prefs.motivation,
+          })
         : sessionApi.login(request.credentials),
     onSuccess: (session, request) => {
       setSession(session);
-      // Геймификация живёт в браузере: новый профиль заводим при регистрации
-      // и при входе с чужого для этого устройства аккаунта.
-      if (request.mode === "register") {
-        createLearner(session.user.email, request.prefs);
-      } else if (learner?.email !== session.user.email) {
-        createLearner(session.user.email, { dailyGoal: 10 });
+      // Локально — только прогресс по категориям; prefs уже в Go.
+      if (
+        request.mode === "register" ||
+        learner?.email !== session.user.email
+      ) {
+        createLearner(session.user.email);
       }
+      void queryClient.invalidateQueries({
+        queryKey: profileQueries.current().queryKey,
+      });
       router.push("/learn");
     },
   });

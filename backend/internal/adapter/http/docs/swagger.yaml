@@ -49,29 +49,269 @@ definitions:
     type: object
   ErrorResponse:
     properties:
+      code:
+        example: no_lives
+        type: string
       error:
         example: не найдено
         type: string
     type: object
-  ProgressResponse:
+  ExerciseAnswerRequest:
     properties:
-      category_id:
+      answer:
+        example: Рақмет
+        type: string
+    type: object
+  ExerciseAnswerResponse:
+    properties:
+      correct:
+        example: true
+        type: boolean
+      expected:
+        example: Рақмет
+        type: string
+    type: object
+  ExerciseResponse:
+    properties:
+      id:
         example: 1
         type: integer
-      category_name_kk:
-        example: Сәлемдесу
+      kind:
+        enum:
+        - choice
+        - translate
+        example: choice
         type: string
-      category_name_ru:
-        example: Приветствия
-        type: string
-      correct_answers:
-        example: 3
+      lesson_id:
+        example: 1
         type: integer
-      last_studied_at:
+      options:
+        items:
+          type: string
+        type: array
+      position:
+        example: 1
+        type: integer
+      prompt:
+        example: Спасибо
         type: string
-      total_answers:
+    type: object
+  LessonDetailResponse:
+    properties:
+      description:
+        example: Как попросить меню
+        type: string
+      exercises:
+        items:
+          $ref: '#/definitions/ExerciseResponse'
+        type: array
+      id:
+        example: 1
+        type: integer
+      position:
+        example: 1
+        type: integer
+      title_kk:
+        example: Тапсырыс
+        type: string
+      title_ru:
+        example: Заказ
+        type: string
+      unit_id:
+        example: 1
+        type: integer
+    type: object
+  LessonProgressResponse:
+    properties:
+      completed:
+        example: true
+        type: boolean
+      correct:
+        example: 6
+        type: integer
+      lesson_id:
+        example: 5
+        type: integer
+      total:
+        example: 7
+        type: integer
+    type: object
+  LessonResponse:
+    properties:
+      description:
+        example: Как попросить меню
+        type: string
+      id:
+        example: 1
+        type: integer
+      position:
+        example: 1
+        type: integer
+      title_kk:
+        example: Тапсырыс
+        type: string
+      title_ru:
+        example: Заказ
+        type: string
+      unit_id:
+        example: 1
+        type: integer
+    type: object
+  LoginRequest:
+    properties:
+      email:
+        example: aidana@example.com
+        type: string
+      password:
+        example: qazaqtili2026
+        type: string
+    type: object
+  PathLessonResponse:
+    properties:
+      description:
+        example: Как попросить меню
+        type: string
+      id:
+        example: 1
+        type: integer
+      position:
+        example: 1
+        type: integer
+      state:
+        enum:
+        - completed
+        - current
+        - locked
+        example: current
+        type: string
+      title_kk:
+        example: Тапсырыс
+        type: string
+      title_ru:
+        example: Заказ
+        type: string
+      unit_id:
+        example: 1
+        type: integer
+    type: object
+  PathResponse:
+    properties:
+      current_lesson_id:
+        type: integer
+      units:
+        items:
+          $ref: '#/definitions/PathUnitResponse'
+        type: array
+    type: object
+  PathUnitResponse:
+    properties:
+      description:
+        example: Заказ и счёт
+        type: string
+      id:
+        example: 1
+        type: integer
+      lesson_count:
+        example: 2
+        type: integer
+      lessons:
+        items:
+          $ref: '#/definitions/PathLessonResponse'
+        type: array
+      position:
+        example: 1
+        type: integer
+      situation_id:
+        example: 1
+        type: integer
+      title_kk:
+        example: Дәмхана
+        type: string
+      title_ru:
+        example: В кафе
+        type: string
+    type: object
+  ProfileResponse:
+    properties:
+      created_at:
+        type: string
+      daily_goal:
+        example: 10
+        type: integer
+      display_name:
+        example: Айдана
+        type: string
+      email:
+        example: aidana@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      last_lesson_on:
+        example: "2026-10-10"
+        type: string
+      level:
+        enum:
+        - A0
+        - A1
+        - A2
+        example: A0
+        type: string
+      lives:
         example: 4
         type: integer
+      max_lives:
+        example: 5
+        type: integer
+      motivation:
+        enum:
+        - work
+        - study
+        - life
+        example: life
+        type: string
+      next_life_at:
+        type: string
+      streak:
+        example: 3
+        type: integer
+      xp:
+        example: 120
+        type: integer
+    type: object
+  ProfileUpdateRequest:
+    properties:
+      daily_goal:
+        example: 15
+        type: integer
+      display_name:
+        example: Айдана
+        type: string
+      level:
+        enum:
+        - A0
+        - A1
+        - A2
+        example: A1
+        type: string
+      motivation:
+        enum:
+        - work
+        - study
+        - life
+        example: work
+        type: string
+    type: object
+  ProgressResponse:
+    properties:
+      lessons:
+        items:
+          $ref: '#/definitions/LessonProgressResponse'
+        type: array
+      units:
+        items:
+          $ref: '#/definitions/UnitProgressResponse'
+        type: array
     type: object
   QuestionResponse:
     properties:
@@ -111,6 +351,35 @@ definitions:
       score:
         $ref: '#/definitions/ScoreResponse'
     type: object
+  RegisterRequest:
+    properties:
+      daily_goal:
+        example: 10
+        type: integer
+      display_name:
+        example: Айдана
+        type: string
+      email:
+        example: aidana@example.com
+        type: string
+      level:
+        enum:
+        - A0
+        - A1
+        - A2
+        example: A0
+        type: string
+      motivation:
+        enum:
+        - work
+        - study
+        - life
+        example: life
+        type: string
+      password:
+        example: qazaqtili2026
+        type: string
+    type: object
   ScoreResponse:
     properties:
       correct:
@@ -120,6 +389,89 @@ definitions:
         example: 5
         type: integer
     type: object
+  SessionResponse:
+    properties:
+      expires_at:
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiJ9...
+        type: string
+      user:
+        $ref: '#/definitions/UserResponse'
+    type: object
+  SituationDetailResponse:
+    properties:
+      description:
+        example: Заказ и счёт
+        type: string
+      id:
+        example: 1
+        type: integer
+      position:
+        example: 1
+        type: integer
+      slug:
+        example: cafe
+        type: string
+      title_kk:
+        example: Дәмхана
+        type: string
+      title_ru:
+        example: В кафе
+        type: string
+      word_count:
+        example: 5
+        type: integer
+      words:
+        items:
+          $ref: '#/definitions/SituationWordResponse'
+        type: array
+    type: object
+  SituationResponse:
+    properties:
+      description:
+        example: Заказ и счёт
+        type: string
+      id:
+        example: 1
+        type: integer
+      position:
+        example: 1
+        type: integer
+      slug:
+        example: cafe
+        type: string
+      title_kk:
+        example: Дәмхана
+        type: string
+      title_ru:
+        example: В кафе
+        type: string
+      word_count:
+        example: 5
+        type: integer
+    type: object
+  SituationWordResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      kazakh:
+        example: Рақмет
+        type: string
+      position:
+        example: 1
+        type: integer
+      russian:
+        example: Спасибо
+        type: string
+      situation_id:
+        example: 1
+        type: integer
+      transcription:
+        example: raqmet
+        type: string
+    type: object
   StartQuizRequest:
     properties:
       category_id:
@@ -127,6 +479,104 @@ definitions:
         type: integer
       size:
         example: 5
+        type: integer
+    type: object
+  StatsResponse:
+    properties:
+      last_lesson_on:
+        example: "2026-10-10"
+        type: string
+      lives:
+        example: 4
+        type: integer
+      max_lives:
+        example: 5
+        type: integer
+      next_life_at:
+        type: string
+      streak:
+        example: 3
+        type: integer
+      xp:
+        example: 120
+        type: integer
+    type: object
+  UnitDetailResponse:
+    properties:
+      description:
+        example: Заказ и счёт
+        type: string
+      id:
+        example: 1
+        type: integer
+      lesson_count:
+        example: 2
+        type: integer
+      lessons:
+        items:
+          $ref: '#/definitions/LessonResponse'
+        type: array
+      position:
+        example: 1
+        type: integer
+      situation_id:
+        example: 1
+        type: integer
+      title_kk:
+        example: Дәмхана
+        type: string
+      title_ru:
+        example: В кафе
+        type: string
+    type: object
+  UnitProgressResponse:
+    properties:
+      completed_lessons:
+        example: 4
+        type: integer
+      total_lessons:
+        example: 5
+        type: integer
+      unit_id:
+        example: 1
+        type: integer
+    type: object
+  UnitResponse:
+    properties:
+      description:
+        example: Заказ и счёт
+        type: string
+      id:
+        example: 1
+        type: integer
+      lesson_count:
+        example: 2
+        type: integer
+      position:
+        example: 1
+        type: integer
+      situation_id:
+        example: 1
+        type: integer
+      title_kk:
+        example: Дәмхана
+        type: string
+      title_ru:
+        example: В кафе
+        type: string
+    type: object
+  UserResponse:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        example: Айдана
+        type: string
+      email:
+        example: aidana@example.com
+        type: string
+      id:
+        example: 1
         type: integer
     type: object
   WordRequest:
@@ -177,10 +627,87 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: 'API для изучения казахского языка: категории, словарь, квиз и прогресс.'
+  description: 'API для изучения казахского языка: категории, словарь, ситуации, путь
+    обучения, юниты, уроки, упражнения, квиз, прогресс и профиль ученика.'
   title: qazTil API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Почта и пароль
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Вход
+      tags:
+      - auth
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Текущий пользователь
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Почта и пароль
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/SessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Регистрация
+      tags:
+      - auth
   /categories:
     get:
       produces:
@@ -303,6 +830,195 @@ paths:
       summary: Обновить категорию
       tags:
       - categories
+  /exercises/{id}/answers:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID упражнения
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Ответ
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ExerciseAnswerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ExerciseAnswerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Проверить ответ на упражнение
+      tags:
+      - course
+  /lessons/{id}:
+    get:
+      description: Правильный ответ в упражнение не входит. Его возвращает проверка.
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/LessonDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Урок и его упражнения
+      tags:
+      - course
+  /lessons/{id}/exercises:
+    get:
+      parameters:
+      - description: ID урока
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ExerciseResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Упражнения урока
+      tags:
+      - course
+  /me/profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ProfileResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Профиль ученика
+      tags:
+      - profile
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Поля для изменения
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ProfileUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить профиль
+      tags:
+      - profile
+  /me/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/StatsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Опыт, жизни и стрик
+      tags:
+      - progress
+  /path:
+    get:
+      description: Юниты с уроками и статусами completed/current/locked для текущего
+        ученика.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PathResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Путь обучения
+      tags:
+      - course
   /progress:
     get:
       produces:
@@ -311,14 +1027,14 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/ProgressResponse'
-            type: array
-        "500":
-          description: Internal Server Error
+            $ref: '#/definitions/ProgressResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/ErrorResponse'
-      summary: Прогресс по категориям
+      security:
+      - BearerAuth: []
+      summary: Прогресс по урокам и модулям
       tags:
       - progress
   /quizzes:
@@ -417,6 +1133,150 @@ paths:
       summary: Ответить на вопрос
       tags:
       - quizzes
+  /situations:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/SituationResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Список ситуаций
+      tags:
+      - situations
+  /situations/{id}:
+    get:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SituationDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Ситуация и её слова
+      tags:
+      - situations
+  /situations/{id}/words:
+    get:
+      parameters:
+      - description: ID ситуации
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/SituationWordResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Слова выбранной ситуации
+      tags:
+      - situations
+  /units:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/UnitResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Список юнитов
+      tags:
+      - course
+  /units/{id}:
+    get:
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/UnitDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Юнит и его уроки
+      tags:
+      - course
+  /units/{id}/lessons:
+    get:
+      parameters:
+      - description: ID юнита
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/LessonResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Уроки юнита
+      tags:
+      - course
   /words:
     get:
       parameters:
@@ -550,4 +1410,10 @@ paths:
       - words
 schemes:
 - http
+securityDefinitions:
+  BearerAuth:
+    description: Токен из /auth/login в виде "Bearer <token>"
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

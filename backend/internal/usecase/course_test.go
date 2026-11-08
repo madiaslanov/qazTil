@@ -109,6 +109,10 @@ func (m *memCourse) ListLessons(_ context.Context, unitID int64) ([]domain.Lesso
 	return out, nil
 }
 
+func (m *memCourse) ListAllLessons(context.Context) ([]domain.Lesson, error) {
+	return append([]domain.Lesson(nil), m.lessons...), nil
+}
+
 func (m *memCourse) GetLesson(_ context.Context, id int64) (domain.Lesson, error) {
 	for _, item := range m.lessons {
 		if item.ID == id {
