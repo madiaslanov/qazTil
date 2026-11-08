@@ -45,8 +45,9 @@ make run
 - `POST /quizzes` — тело `{"category_id": 1, "size": 5}`, в ответе русское слово и четыре казахских варианта
 - `POST /quizzes/{id}/answers` — тело `{"question_id": 1, "selected_index": 0}`
 - `GET /quizzes/{id}` — счёт
-- `GET /progress` — ответы по каждой категории
+- `GET /progress` — прогресс по урокам и модулям из попыток. `GET /me/stats` — опыт, жизни и стрик
 - `GET /situations`, `GET /situations/{id}` — ситуация и её слова; `GET /situations/{id}/words` — только слова
+- `GET /path` — путь обучения: юниты с уроками и статусами `completed` / `current` / `locked` (нужен Bearer)
 - `GET /units`, `GET /units/{id}` — юнит и уроки; `GET /units/{id}/lessons` — только уроки
 - `GET /lessons/{id}` — урок и упражнения без правильного ответа; `GET /lessons/{id}/exercises` — только упражнения
 - `POST /exercises/{id}/answers` — тело `{"answer": "Рақмет"}`, в ответе `correct` и ожидаемая строка

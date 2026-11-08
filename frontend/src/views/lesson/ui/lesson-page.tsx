@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
-import { useLearnerStore, useLives } from "@/entities/learner";
+import { profileQueries, useLives } from "@/entities/learner";
 import { QuizSession, type LessonScore } from "@/features/quiz-session";
 import { Screen } from "@/shared/ui";
 
@@ -16,10 +17,9 @@ function questionsFor(goalMinutes: number | undefined) {
 
 export function LessonPage({ categoryId }: { categoryId: number }) {
   const router = useRouter();
-  const dailyGoal = useLearnerStore((state) => state.learner?.dailyGoal);
-  const { lives } = useLives();
+  const profile = useQuery(profileQueries.current());
+  const { lives, pending } = useLives();
   const [finished, setFinished] = useState<LessonScore | null>(null);
-  const [started] = useState(() => lives > 0);
   const onFinished = useCallback(
     (score: LessonScore) => setFinished(score),
     [],
@@ -27,10 +27,10 @@ export function LessonPage({ categoryId }: { categoryId: number }) {
 
   // Без жизней урок не начинаем — на пути покажется «Жизни закончились».
   useEffect(() => {
-    if (!started) router.replace("/learn");
-  }, [started, router]);
+    if (!pending && lives === 0) router.replace("/learn");
+  }, [lives, pending, router]);
 
-  if (!started) {
+  if (pending || profile.isPending || lives === 0) {
     return <Screen />;
   }
 
@@ -42,7 +42,7 @@ export function LessonPage({ categoryId }: { categoryId: number }) {
     <Screen className="h-dvh bg-surface-muted">
       <QuizSession
         categoryId={categoryId}
-        size={questionsFor(dailyGoal)}
+        size={questionsFor(profile.data?.daily_goal)}
         onFinished={onFinished}
       />
     </Screen>

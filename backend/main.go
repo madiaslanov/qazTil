@@ -21,7 +21,7 @@ import (
 
 // @title qazTil API
 // @version 1.0
-// @description API для изучения казахского языка: категории, словарь, ситуации, юниты, уроки, упражнения, квиз и прогресс.
+// @description API для изучения казахского языка: категории, словарь, ситуации, путь обучения, юниты, уроки, упражнения, квиз, прогресс и профиль ученика.
 // @host localhost:8080
 // @BasePath /api/v1
 // @schemes http
@@ -85,6 +85,9 @@ func main() {
 	situations := postgres.NewSituationRepo(db)
 	course := postgres.NewCourseRepo(db)
 	users := postgres.NewUserRepo(db)
+	learner := postgres.NewLearnerRepo(db)
+	profiles := postgres.NewProfileRepo(db)
+	courseProgress := postgres.NewCourseProgressRepo(db)
 
 	tokens := security.NewJWTIssuer(cfg.jwtSecret, cfg.jwtTTL)
 	hasher := security.NewBcryptHasher(cfg.bcryptCost)
@@ -93,10 +96,13 @@ func main() {
 		usecase.NewCategoryService(categories),
 		usecase.NewWordService(categories, words),
 		usecase.NewQuizService(categories, words, quizzes, progress),
-		usecase.NewProgressService(categories, progress),
+		usecase.NewProgressService(courseProgress),
 		usecase.NewSituationService(situations),
 		usecase.NewCourseService(course),
-		usecase.NewAuthService(users, hasher, tokens),
+		usecase.NewPathService(course, courseProgress),
+		usecase.NewAttemptService(course, learner),
+		usecase.NewAuthService(users, profiles, hasher, tokens),
+		usecase.NewProfileService(users, profiles, learner),
 		tokens,
 		cfg.webDir,
 		cfg.origins,

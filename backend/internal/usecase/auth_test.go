@@ -48,6 +48,38 @@ func (m *memUsers) GetByID(_ context.Context, id int64) (domain.User, error) {
 	return user, nil
 }
 
+func (m *memUsers) UpdateDisplayName(_ context.Context, id int64, displayName string) (domain.User, error) {
+	user, ok := m.items[id]
+	if !ok {
+		return domain.User{}, domain.ErrNotFound
+	}
+	user.DisplayName = displayName
+	m.items[id] = user
+	return user, nil
+}
+
+type memProfiles struct {
+	items map[int64]domain.ProfilePrefs
+}
+
+func newMemProfiles() *memProfiles {
+	return &memProfiles{items: map[int64]domain.ProfilePrefs{}}
+}
+
+func (m *memProfiles) Get(_ context.Context, userID int64) (domain.ProfilePrefs, error) {
+	if prefs, ok := m.items[userID]; ok {
+		return prefs, nil
+	}
+	prefs := domain.DefaultProfilePrefs()
+	m.items[userID] = prefs
+	return prefs, nil
+}
+
+func (m *memProfiles) Save(_ context.Context, userID int64, prefs domain.ProfilePrefs) error {
+	m.items[userID] = prefs
+	return nil
+}
+
 // stubHasher stands in for bcrypt so the tests stay fast.
 type stubHasher struct{}
 
@@ -69,17 +101,25 @@ func (s *stubTokens) Issue(userID int64) (string, time.Time, error) {
 
 func (s *stubTokens) Parse(string) (int64, error) { return 0, domain.ErrUnauthorized }
 
-func newAuth() (*AuthService, *memUsers) {
+func newAuth() (*AuthService, *memUsers, *memProfiles) {
 	users := newMemUsers()
-	return NewAuthService(users, stubHasher{}, &stubTokens{}), users
+	profiles := newMemProfiles()
+	return NewAuthService(users, profiles, stubHasher{}, &stubTokens{}), users, profiles
 }
 
 func TestRegisterStoresHashAndIssuesToken(t *testing.T) {
-	auth, users := newAuth()
+	auth, users, profiles := newAuth()
 
-	session, err := auth.Register(context.Background(), "  Aidana@Example.COM ", "qazaqtili2026", "Айдана")
+	session, err := auth.Register(context.Background(), "  Aidana@Example.COM ", "qazaqtili2026", "Айдана", domain.ProfilePrefs{})
 	if err != nil {
 		t.Fatalf("register: %v", err)
+	}
+	prefs, err := profiles.Get(context.Background(), session.User.ID)
+	if err != nil {
+		t.Fatalf("prefs: %v", err)
+	}
+	if prefs != domain.DefaultProfilePrefs() {
+		t.Fatalf("prefs = %+v", prefs)
 	}
 	if session.Token == "" {
 		t.Fatal("want a token")
@@ -104,9 +144,9 @@ func TestRegisterStoresHashAndIssuesToken(t *testing.T) {
 }
 
 func TestRegisterFallsBackToEmailName(t *testing.T) {
-	auth, _ := newAuth()
+	auth, _, _ := newAuth()
 
-	session, err := auth.Register(context.Background(), "erasyl@example.com", "qazaqtili2026", "   ")
+	session, err := auth.Register(context.Background(), "erasyl@example.com", "qazaqtili2026", "   ", domain.ProfilePrefs{})
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -115,15 +155,48 @@ func TestRegisterFallsBackToEmailName(t *testing.T) {
 	}
 }
 
+func TestRegisterStoresOnboardingPrefs(t *testing.T) {
+	auth, _, profiles := newAuth()
+	prefs := domain.ProfilePrefs{
+		DailyGoal:  domain.DailyGoalLong,
+		Level:      domain.LevelA1,
+		Motivation: domain.MotivationWork,
+	}
+
+	session, err := auth.Register(context.Background(), "nurlan@example.com", "qazaqtili2026", "Нурлан", prefs)
+	if err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	stored, err := profiles.Get(context.Background(), session.User.ID)
+	if err != nil {
+		t.Fatalf("prefs: %v", err)
+	}
+	if stored != prefs {
+		t.Fatalf("prefs = %+v, want %+v", stored, prefs)
+	}
+}
+
+func TestRegisterRejectsBadPrefs(t *testing.T) {
+	auth, _, _ := newAuth()
+	_, err := auth.Register(context.Background(), "bad@example.com", "qazaqtili2026", "", domain.ProfilePrefs{
+		DailyGoal:  7,
+		Level:      domain.LevelA0,
+		Motivation: domain.MotivationLife,
+	})
+	if !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("want ErrInvalid, got %v", err)
+	}
+}
+
 func TestRegisterRejectsDuplicateEmail(t *testing.T) {
-	auth, _ := newAuth()
+	auth, _, _ := newAuth()
 	ctx := context.Background()
 
-	if _, err := auth.Register(ctx, "madi@example.com", "qazaqtili2026", ""); err != nil {
+	if _, err := auth.Register(ctx, "madi@example.com", "qazaqtili2026", "", domain.ProfilePrefs{}); err != nil {
 		t.Fatalf("first register: %v", err)
 	}
 	// Same address, different case: normalization must still catch it.
-	_, err := auth.Register(ctx, "MADI@example.com", "qazaqtili2026", "")
+	_, err := auth.Register(ctx, "MADI@example.com", "qazaqtili2026", "", domain.ProfilePrefs{})
 	if !errors.Is(err, domain.ErrEmailTaken) {
 		t.Fatalf("want ErrEmailTaken, got %v", err)
 	}
@@ -139,8 +212,8 @@ func TestRegisterRejectsBadInput(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			auth, _ := newAuth()
-			if _, err := auth.Register(context.Background(), tc.email, tc.password, ""); !errors.Is(err, domain.ErrInvalid) {
+			auth, _, _ := newAuth()
+			if _, err := auth.Register(context.Background(), tc.email, tc.password, "", domain.ProfilePrefs{}); !errors.Is(err, domain.ErrInvalid) {
 				t.Fatalf("want ErrInvalid, got %v", err)
 			}
 		})
@@ -148,9 +221,9 @@ func TestRegisterRejectsBadInput(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	auth, _ := newAuth()
+	auth, _, _ := newAuth()
 	ctx := context.Background()
-	if _, err := auth.Register(ctx, "maria@example.com", "qazaqtili2026", "Мария"); err != nil {
+	if _, err := auth.Register(ctx, "maria@example.com", "qazaqtili2026", "Мария", domain.ProfilePrefs{}); err != nil {
 		t.Fatalf("register: %v", err)
 	}
 
@@ -164,9 +237,9 @@ func TestLogin(t *testing.T) {
 }
 
 func TestLoginRejectsWrongPasswordAndUnknownEmailAlike(t *testing.T) {
-	auth, _ := newAuth()
+	auth, _, _ := newAuth()
 	ctx := context.Background()
-	if _, err := auth.Register(ctx, "maria@example.com", "qazaqtili2026", ""); err != nil {
+	if _, err := auth.Register(ctx, "maria@example.com", "qazaqtili2026", "", domain.ProfilePrefs{}); err != nil {
 		t.Fatalf("register: %v", err)
 	}
 
@@ -183,9 +256,9 @@ func TestLoginRejectsWrongPasswordAndUnknownEmailAlike(t *testing.T) {
 }
 
 func TestMeHidesPasswordHash(t *testing.T) {
-	auth, _ := newAuth()
+	auth, _, _ := newAuth()
 	ctx := context.Background()
-	session, err := auth.Register(ctx, "birzhan@example.com", "qazaqtili2026", "")
+	session, err := auth.Register(ctx, "birzhan@example.com", "qazaqtili2026", "", domain.ProfilePrefs{})
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}

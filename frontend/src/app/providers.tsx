@@ -38,6 +38,7 @@ configureAuth({
   onUnauthorized: () => {
     useSessionStore.getState().clear();
     getQueryClient().removeQueries({ queryKey: ["session"] });
+    getQueryClient().removeQueries({ queryKey: ["me"] });
   },
 });
 

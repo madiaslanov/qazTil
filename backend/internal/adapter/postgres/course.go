@@ -73,6 +73,28 @@ func (r *CourseRepo) ListLessons(ctx context.Context, unitID int64) ([]domain.Le
 	return out, rows.Err()
 }
 
+func (r *CourseRepo) ListAllLessons(ctx context.Context) ([]domain.Lesson, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT l.id, l.unit_id, l.title_kk, l.title_ru, l.description, l.position
+		FROM lessons l
+		JOIN units u ON u.id = l.unit_id
+		ORDER BY u.position, u.id, l.position, l.id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := []domain.Lesson{}
+	for rows.Next() {
+		item, err := scanLesson(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, item)
+	}
+	return out, rows.Err()
+}
+
 func (r *CourseRepo) GetLesson(ctx context.Context, id int64) (domain.Lesson, error) {
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, unit_id, title_kk, title_ru, description, position

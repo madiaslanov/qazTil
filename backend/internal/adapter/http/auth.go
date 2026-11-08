@@ -23,7 +23,7 @@ func (a *API) Register(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
-	session, err := a.auth.Register(r.Context(), req.Email, req.Password, req.DisplayName)
+	session, err := a.auth.Register(r.Context(), req.Email, req.Password, req.DisplayName, toPrefs(req))
 	if err != nil {
 		writeErr(w, err)
 		return

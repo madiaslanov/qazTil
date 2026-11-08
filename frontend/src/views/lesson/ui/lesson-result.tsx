@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Check, Flame, Target } from "lucide-react";
 
-import { useLearnerStore, XP_PER_CORRECT_ANSWER } from "@/entities/learner";
+import { useLives, XP_PER_CORRECT_ANSWER } from "@/entities/learner";
 import type { LessonScore } from "@/features/quiz-session";
 import { Button, Card, IconBadge, Screen } from "@/shared/ui";
 
@@ -17,7 +17,7 @@ function plural(days: number) {
 
 /** Экран после урока: XP, страйк и точность прохождения. */
 export function LessonResult({ score }: { score: LessonScore }) {
-  const streak = useLearnerStore((state) => state.learner?.streak ?? 0);
+  const { streak } = useLives();
   const accuracy =
     score.total === 0 ? 0 : Math.round((score.correct / score.total) * 100);
 

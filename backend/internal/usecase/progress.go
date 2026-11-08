@@ -6,36 +6,28 @@ import (
 	"github.com/madiaslanov/qazTil/internal/domain"
 )
 
-// ProgressService reports answer totals for every category.
+// ProgressService reports lesson and unit progress from exercise attempts.
 type ProgressService struct {
-	categories domain.CategoryRepository
-	progress   domain.ProgressRepository
+	progress domain.CourseProgressRepository
 }
 
-func NewProgressService(categories domain.CategoryRepository, progress domain.ProgressRepository) *ProgressService {
-	return &ProgressService{categories: categories, progress: progress}
+func NewProgressService(progress domain.CourseProgressRepository) *ProgressService {
+	return &ProgressService{progress: progress}
 }
 
-func (s *ProgressService) List(ctx context.Context) ([]domain.Progress, error) {
-	categories, err := s.categories.List(ctx)
+func (s *ProgressService) List(ctx context.Context, userID int64) (domain.CourseProgress, error) {
+	if userID <= 0 {
+		return domain.CourseProgress{}, domain.ErrInvalid
+	}
+	progress, err := s.progress.List(ctx, userID)
 	if err != nil {
-		return nil, err
+		return domain.CourseProgress{}, err
 	}
-	stats, err := s.progress.List(ctx)
-	if err != nil {
-		return nil, err
+	if progress.Lessons == nil {
+		progress.Lessons = []domain.LessonProgress{}
 	}
-	byCategory := make(map[int64]domain.Progress, len(stats))
-	for _, item := range stats {
-		byCategory[item.CategoryID] = item
+	if progress.Units == nil {
+		progress.Units = []domain.UnitProgress{}
 	}
-	out := make([]domain.Progress, 0, len(categories))
-	for _, category := range categories {
-		item := byCategory[category.ID]
-		item.CategoryID = category.ID
-		item.CategoryNameKK = category.NameKK
-		item.CategoryNameRU = category.NameRU
-		out = append(out, item)
-	}
-	return out, nil
+	return progress, nil
 }
