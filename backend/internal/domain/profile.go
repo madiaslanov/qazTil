@@ -32,6 +32,21 @@ type ProfilePrefs struct {
 	DailyGoal  int
 	Level      Level
 	Motivation Motivation
+	// Timezone is the IANA zone the learner's day is measured in.
+	Timezone string
+	// Onboarded is false while the prefs are only the defaults: the learner
+	// has not chosen a level, a goal or a motivation yet.
+	Onboarded bool
+}
+
+// DailyProgress is how far the learner got against the goal they set, counted
+// in their own day rather than the server's.
+type DailyProgress struct {
+	Date             string
+	XPEarned         int
+	GoalXP           int
+	GoalMet          bool
+	LessonsCompleted int
 }
 
 // DefaultProfilePrefs is what a new account gets before onboarding is saved.
@@ -40,6 +55,9 @@ func DefaultProfilePrefs() ProfilePrefs {
 		DailyGoal:  DailyGoalMedium,
 		Level:      LevelA0,
 		Motivation: MotivationLife,
+		Timezone:   DefaultTimezone,
+		// Onboarded stays false: these are the values a learner gets before
+		// they have chosen anything.
 	}
 }
 
@@ -71,4 +89,5 @@ type Profile struct {
 	CreatedAt   time.Time
 	Prefs       ProfilePrefs
 	Stats       LearnerStats
+	Daily       DailyProgress
 }

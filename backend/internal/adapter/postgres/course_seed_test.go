@@ -35,11 +35,23 @@ func TestSeedCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(situations) != 3 || situations[0].WordCount != 5 || situations[0].TitleRU != "В кафе" {
-		t.Fatalf("situations = %+v", situations)
+	// Проверяем состав, а не количество: добавление новой ситуации в сид —
+	// обычное дело и ронять этот тест не должно.
+	bySlug := map[string]domain.Situation{}
+	for _, item := range situations {
+		bySlug[item.Slug] = item
+	}
+	for _, slug := range []string{"cafe", "shop", "road"} {
+		if _, ok := bySlug[slug]; !ok {
+			t.Fatalf("ситуация %q не засеяна, есть: %+v", slug, situations)
+		}
+	}
+	cafe := bySlug["cafe"]
+	if cafe.WordCount != 5 || cafe.TitleRU != "В кафе" {
+		t.Fatalf("cafe = %+v", cafe)
 	}
 
-	opened, words, err := usecase.NewSituationService(postgres.NewSituationRepo(db)).Open(ctx, situations[0].ID)
+	opened, words, err := usecase.NewSituationService(postgres.NewSituationRepo(db)).Open(ctx, cafe.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,11 +64,21 @@ func TestSeedCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(units) != 3 || units[0].SituationID != situations[0].ID || units[0].LessonCount != 2 {
-		t.Fatalf("units = %+v", units)
+	if len(units) != len(situations) {
+		t.Fatalf("юнитов %d при %d ситуациях", len(units), len(situations))
+	}
+	var cafeUnit domain.Unit
+	for _, unit := range units {
+		if unit.SituationID == cafe.ID {
+			cafeUnit = unit
+			break
+		}
+	}
+	if cafeUnit.ID == 0 || cafeUnit.LessonCount != 2 {
+		t.Fatalf("юнит кафе = %+v", cafeUnit)
 	}
 
-	_, lessons, err := usecase.NewCourseService(course).OpenUnit(ctx, units[0].ID)
+	_, lessons, err := usecase.NewCourseService(course).OpenUnit(ctx, cafeUnit.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

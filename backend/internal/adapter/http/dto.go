@@ -126,13 +126,30 @@ type UnitDetailResponse struct {
 	Lessons []LessonResponse `json:"lessons"`
 } // @name UnitDetailResponse
 
+// ExerciseItemResponse is one labelled piece: an option, a column entry or a
+// tile. The id is local to the exercise, not a database key.
+type ExerciseItemResponse struct {
+	ID   string `json:"id" example:"o1"`
+	Text string `json:"text" example:"Рақмет"`
+} // @name ExerciseItemResponse
+
+// ExerciseResponse never carries the answer key. Only the fields belonging to
+// the exercise's own kind are filled.
 type ExerciseResponse struct {
-	ID       int64    `json:"id" example:"1"`
-	LessonID int64    `json:"lesson_id" example:"1"`
-	Kind     string   `json:"kind" example:"choice" enums:"choice,translate"`
-	Prompt   string   `json:"prompt" example:"Спасибо"`
-	Options  []string `json:"options"`
-	Position int      `json:"position" example:"1"`
+	ID       int64  `json:"id" example:"1"`
+	LessonID int64  `json:"lesson_id" example:"1"`
+	Kind     string `json:"kind" example:"choice" enums:"choice,translate,match,assemble"`
+	Position int    `json:"position" example:"1"`
+	Prompt   string `json:"prompt,omitempty" example:"Спасибо"`
+	// Options belong to a choice exercise.
+	Options []ExerciseItemResponse `json:"options,omitempty"`
+	// PairsLeft and PairsRight belong to a match exercise.
+	PairsLeft  []ExerciseItemResponse `json:"pairs_left,omitempty"`
+	PairsRight []ExerciseItemResponse `json:"pairs_right,omitempty"`
+	// Tiles belong to an assemble exercise.
+	Tiles []ExerciseItemResponse `json:"tiles,omitempty"`
+	// LegacyOptions serves the choice exercises seeded before payload existed.
+	LegacyOptions []string `json:"legacy_options,omitempty"`
 } // @name ExerciseResponse
 
 type LessonDetailResponse struct {
@@ -140,13 +157,39 @@ type LessonDetailResponse struct {
 	Exercises []ExerciseResponse `json:"exercises"`
 } // @name LessonDetailResponse
 
+// ExerciseAnswerRequest carries the answer in the shape the exercise kind
+// calls for. Only the fields of that kind are read.
 type ExerciseAnswerRequest struct {
-	Answer string `json:"answer" example:"Рақмет"`
+	// Kind is optional: it only documents what the client meant to send.
+	Kind string `json:"kind,omitempty" example:"choice" enums:"choice,translate,match,assemble"`
+	// Answer is the typed line of a translate exercise.
+	Answer string `json:"answer,omitempty" example:"Рақмет"`
+	// OptionID is the picked option of a choice exercise.
+	OptionID string `json:"option_id,omitempty" example:"o1"`
+	// Pairs are the connections of a match exercise, as [left, right].
+	Pairs [][2]string `json:"pairs,omitempty"`
+	// TileIDs are the tiles of an assemble exercise, in the learner's order.
+	TileIDs []string `json:"tile_ids,omitempty"`
 } // @name ExerciseAnswerRequest
 
 type ExerciseAnswerResponse struct {
 	Correct  bool   `json:"correct" example:"true"`
 	Expected string `json:"expected" example:"Рақмет"`
+	// Lives left after this answer. A wrong first attempt spends one.
+	Lives    int `json:"lives" example:"4"`
+	MaxLives int `json:"max_lives" example:"5"`
+	// LessonFailed is true when the last life went on this answer: the lesson
+	// stops and has to be started again.
+	LessonFailed bool `json:"lesson_failed" example:"false"`
+	// LessonCompleted is true once every exercise of the lesson has an answer.
+	LessonCompleted bool `json:"lesson_completed" example:"false"`
+	// XPEarned is what this single answer added, not the running total.
+	XPEarned int `json:"xp_earned" example:"5"`
+	Streak   int `json:"streak" example:"4"`
+	// StreakIncreased is false when a lesson was already finished today.
+	StreakIncreased bool `json:"streak_increased" example:"false"`
+	// NextLessonID is the lesson that opened up, null at the end of the path.
+	NextLessonID *int64 `json:"next_lesson_id"`
 } // @name ExerciseAnswerResponse
 
 type LessonProgressResponse struct {
@@ -200,7 +243,18 @@ type StatsResponse struct {
 	NextLifeAt   *time.Time `json:"next_life_at"`
 	Streak       int        `json:"streak" example:"3"`
 	LastLessonOn *string    `json:"last_lesson_on" example:"2026-10-10"`
+	// Today is progress against the daily goal, counted in the learner's own
+	// day rather than the server's.
+	Today DailyResponse `json:"today"`
 } // @name StatsResponse
+
+// DailyResponse is how far the learner got today against the goal they set.
+type DailyResponse struct {
+	Date     string `json:"date" example:"2026-11-16"`
+	XPEarned int    `json:"xp_earned" example:"10"`
+	GoalXP   int    `json:"goal_xp" example:"10"`
+	GoalMet  bool   `json:"goal_met" example:"true"`
+} // @name DailyResponse
 
 type RegisterRequest struct {
 	Email       string  `json:"email" example:"aidana@example.com"`
@@ -243,6 +297,11 @@ type ProfileResponse struct {
 	NextLifeAt   *time.Time `json:"next_life_at"`
 	Streak       int        `json:"streak" example:"3"`
 	LastLessonOn *string    `json:"last_lesson_on" example:"2026-10-10"`
+	// Onboarded is false while the prefs are only the defaults: send the
+	// learner to the setup screen.
+	Onboarded bool `json:"onboarded" example:"true"`
+	// Timezone is the IANA zone the learner's day is measured in.
+	Timezone string `json:"timezone" example:"Asia/Almaty"`
 } // @name ProfileResponse
 
 type ProfileUpdateRequest struct {

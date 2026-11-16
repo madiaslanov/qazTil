@@ -35,11 +35,18 @@ func TestProfilePrefsRoundTrip(t *testing.T) {
 		t.Fatalf("defaults = %+v", defaults)
 	}
 
+	if defaults.Onboarded {
+		t.Fatal("ученик без выбора не должен считаться прошедшим онбординг")
+	}
+
 	prefs := domain.ProfilePrefs{
 		DailyGoal:  domain.DailyGoalLong,
 		Level:      domain.LevelA1,
 		Motivation: domain.MotivationStudy,
+		Timezone:   "Asia/Almaty",
 	}
+	// Сохранение без флага — это регистрация: настройки легли, но выбора
+	// ученик не делал.
 	if err := repo.Save(ctx, user.ID, prefs); err != nil {
 		t.Fatal(err)
 	}
@@ -49,5 +56,32 @@ func TestProfilePrefsRoundTrip(t *testing.T) {
 	}
 	if loaded != prefs {
 		t.Fatalf("loaded = %+v", loaded)
+	}
+
+	// А это уже онбординг.
+	prefs.Onboarded = true
+	if err := repo.Save(ctx, user.ID, prefs); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err = repo.Get(ctx, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded != prefs {
+		t.Fatalf("loaded = %+v", loaded)
+	}
+
+	// Повторная правка не сбрасывает признак, даже если флаг не прислали.
+	prefs.DailyGoal = domain.DailyGoalMedium
+	prefs.Onboarded = false
+	if err := repo.Save(ctx, user.ID, prefs); err != nil {
+		t.Fatal(err)
+	}
+	again, err := repo.Get(ctx, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !again.Onboarded || again.DailyGoal != domain.DailyGoalMedium {
+		t.Fatalf("again = %+v", again)
 	}
 }

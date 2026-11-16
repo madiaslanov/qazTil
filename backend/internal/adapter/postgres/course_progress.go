@@ -106,3 +106,51 @@ func (r *CourseProgressRepo) exercises(ctx context.Context, userID int64) ([]dom
 	}
 	return exercises, marks, rows.Err()
 }
+
+// Lesson reports how far one learner got inside one lesson. The path uses the
+// same rule: a lesson counts as done once every exercise has an attempt.
+func (r *CourseProgressRepo) Lesson(ctx context.Context, userID, lessonID int64) (domain.LessonProgress, error) {
+	var total, attempted, correct int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*),
+			COUNT(*) FILTER (WHERE EXISTS (
+				SELECT 1 FROM attempts a
+				WHERE a.exercise_id = e.id AND a.user_id = $2
+			)),
+			COUNT(*) FILTER (WHERE EXISTS (
+				SELECT 1 FROM attempts a
+				WHERE a.exercise_id = e.id AND a.user_id = $2 AND a.correct
+			))
+		FROM exercises e
+		WHERE e.lesson_id = $1`, lessonID, userID).Scan(&total, &attempted, &correct)
+	if err != nil {
+		return domain.LessonProgress{}, err
+	}
+	return domain.LessonProgress{
+		LessonID:  lessonID,
+		Completed: total > 0 && attempted == total,
+		Correct:   correct,
+		Total:     total,
+	}, nil
+}
+
+// ResumePosition is the 0-based index of the first exercise the learner has
+// not answered yet. A finished lesson resumes at zero: it starts over.
+func (r *CourseProgressRepo) ResumePosition(ctx context.Context, userID, lessonID int64) (int, error) {
+	var position int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT COUNT(*)
+		FROM exercises e
+		WHERE e.lesson_id = $1
+		  AND e.position <= COALESCE((
+			SELECT MAX(e2.position) FROM exercises e2
+			WHERE e2.lesson_id = $1 AND EXISTS (
+				SELECT 1 FROM attempts a
+				WHERE a.exercise_id = e2.id AND a.user_id = $2
+			)
+		  ), 0)`, lessonID, userID).Scan(&position)
+	if err != nil {
+		return 0, err
+	}
+	return position, nil
+}

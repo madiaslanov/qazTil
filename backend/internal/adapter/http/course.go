@@ -155,14 +155,27 @@ func (a *API) AnswerExercise(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
-	result, err := a.attempts.Answer(r.Context(), userID, id, req.Answer)
+	result, err := a.attempts.Answer(r.Context(), userID, id, domain.ExerciseAnswer{
+		Text:     req.Answer,
+		OptionID: req.OptionID,
+		Pairs:    req.Pairs,
+		TileIDs:  req.TileIDs,
+	})
 	if err != nil {
 		writeErr(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, ExerciseAnswerResponse{
-		Correct:  result.Correct,
-		Expected: result.Expected,
+		Correct:         result.Correct,
+		Expected:        result.Expected,
+		Lives:           result.Lives,
+		MaxLives:        result.MaxLives,
+		LessonFailed:    result.LessonFailed,
+		LessonCompleted: result.LessonCompleted,
+		XPEarned:        result.XPEarned,
+		Streak:          result.Streak,
+		StreakIncreased: result.StreakIncreased,
+		NextLessonID:    result.NextLessonID,
 	})
 }
 
@@ -200,18 +213,49 @@ func toLesson(item domain.Lesson) LessonResponse {
 func toExercises(items []domain.Exercise) []ExerciseResponse {
 	out := make([]ExerciseResponse, 0, len(items))
 	for _, item := range items {
-		options := item.Options
-		if options == nil {
-			options = []string{}
+		out = append(out, toExercise(item))
+	}
+	return out
+}
+
+// toExercise fills only the fields of the exercise's own kind. The answer key
+// lives in domain.Exercise.Answer and has no field here, so it cannot leak.
+func toExercise(item domain.Exercise) ExerciseResponse {
+	out := ExerciseResponse{
+		ID:       item.ID,
+		LessonID: item.LessonID,
+		Kind:     item.Kind,
+		Prompt:   item.Prompt,
+		Position: item.Position,
+	}
+	payload, err := item.DecodePayload()
+	if err != nil {
+		// A payload that cannot be read is served as an exercise without
+		// pieces rather than failing the whole lesson.
+		return out
+	}
+	switch item.Kind {
+	case domain.ExerciseChoice:
+		out.Options = toItems(payload.Options)
+		if len(out.Options) == 0 && len(item.Options) > 0 {
+			out.LegacyOptions = item.Options
 		}
-		out = append(out, ExerciseResponse{
-			ID:       item.ID,
-			LessonID: item.LessonID,
-			Kind:     item.Kind,
-			Prompt:   item.Prompt,
-			Options:  options,
-			Position: item.Position,
-		})
+	case domain.ExerciseMatch:
+		out.PairsLeft = toItems(payload.PairsLeft)
+		out.PairsRight = toItems(payload.PairsRight)
+	case domain.ExerciseAssemble:
+		out.Tiles = toItems(payload.Tiles)
+	}
+	return out
+}
+
+func toItems(items []domain.ExerciseItem) []ExerciseItemResponse {
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]ExerciseItemResponse, 0, len(items))
+	for _, item := range items {
+		out = append(out, ExerciseItemResponse{ID: item.ID, Text: item.Text})
 	}
 	return out
 }

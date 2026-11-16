@@ -109,7 +109,7 @@ func (r *CourseRepo) GetLesson(ctx context.Context, id int64) (domain.Lesson, er
 
 func (r *CourseRepo) ListExercises(ctx context.Context, lessonID int64) ([]domain.Exercise, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, lesson_id, kind, prompt, answer, options_json, position
+		SELECT id, lesson_id, kind, prompt, answer, options_json, position, payload
 		FROM exercises
 		WHERE lesson_id = $1
 		ORDER BY position, id`, lessonID)
@@ -131,7 +131,7 @@ func (r *CourseRepo) ListExercises(ctx context.Context, lessonID int64) ([]domai
 
 func (r *CourseRepo) GetExercise(ctx context.Context, id int64) (domain.Exercise, error) {
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, lesson_id, kind, prompt, answer, options_json, position
+		SELECT id, lesson_id, kind, prompt, answer, options_json, position, payload
 		FROM exercises
 		WHERE id = $1`, id)
 	item, err := scanExercise(row)
@@ -155,12 +155,14 @@ func scanLesson(row situationScanner) (domain.Lesson, error) {
 
 func scanExercise(row situationScanner) (domain.Exercise, error) {
 	var (
-		item domain.Exercise
-		raw  string
+		item    domain.Exercise
+		raw     string
+		payload []byte
 	)
-	if err := row.Scan(&item.ID, &item.LessonID, &item.Kind, &item.Prompt, &item.Answer, &raw, &item.Position); err != nil {
+	if err := row.Scan(&item.ID, &item.LessonID, &item.Kind, &item.Prompt, &item.Answer, &raw, &item.Position, &payload); err != nil {
 		return domain.Exercise{}, err
 	}
+	item.Payload = payload
 	options, err := decodeOptions(raw)
 	if err != nil {
 		return domain.Exercise{}, err

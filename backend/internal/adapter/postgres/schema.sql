@@ -131,3 +131,39 @@ CREATE TABLE IF NOT EXISTS learner_profiles (
     level TEXT NOT NULL DEFAULT 'A0',
     motivation TEXT NOT NULL DEFAULT 'life'
 );
+
+-- QAZ-10. Упражнения на сопоставление и сборку фразы.
+--
+-- payload держит всё, что видит клиент, в форме своего типа: варианты для
+-- choice, две колонки для match, плитки для assemble. Ключ ответа остаётся
+-- в answer и в payload не попадает никогда, поэтому упражнение физически
+-- нельзя отдать вместе с правильным ответом.
+--
+-- Значения заданы через TEXT и CHECK, а не ENUM: Migrate режет этот файл по
+-- точке с запятой и выполняет куски по отдельности, блоки DO тут не работают.
+
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS payload JSONB NOT NULL DEFAULT '{}';
+
+-- QAZ-2. Онбординг должен влиять на путь: уровень задаёт точку входа,
+-- тема — порядок юнитов под мотивацию ученика.
+
+ALTER TABLE units ADD COLUMN IF NOT EXISTS level TEXT NOT NULL DEFAULT 'A0'
+    CHECK (level IN ('A0', 'A1', 'A2', 'B1', 'B2'));
+
+ALTER TABLE units ADD COLUMN IF NOT EXISTS topic TEXT
+    CHECK (topic IN ('work', 'study', 'life'));
+
+CREATE INDEX IF NOT EXISTS idx_units_level ON units(level, position);
+
+-- QAZ-2. Флаг прохождения онбординга и часовой пояс ученика.
+--
+-- onboarded_at отличает ученика, который осознанно выбрал уровень и цель, от
+-- того, кому проставились значения по умолчанию. Без него фронт не знает,
+-- вести ли на /setup.
+--
+-- timezone нужен дневной цели и стрику: день у ученика заканчивается по его
+-- местному времени, а не по UTC сервера.
+
+ALTER TABLE learner_profiles ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
+
+ALTER TABLE learner_profiles ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Asia/Almaty';
