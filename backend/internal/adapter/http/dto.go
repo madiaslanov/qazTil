@@ -302,6 +302,9 @@ type ProfileResponse struct {
 	Onboarded bool `json:"onboarded" example:"true"`
 	// Timezone is the IANA zone the learner's day is measured in.
 	Timezone string `json:"timezone" example:"Asia/Almaty"`
+	// Today is progress against the daily goal. The app reads the profile and
+	// nothing else, so the goal has to travel with it.
+	Today DailyResponse `json:"today"`
 } // @name ProfileResponse
 
 type ProfileUpdateRequest struct {
