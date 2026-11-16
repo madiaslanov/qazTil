@@ -60,6 +60,11 @@ func (s *AuthService) Register(ctx context.Context, email, password, displayName
 	}
 	if prefs == (domain.ProfilePrefs{}) {
 		prefs = domain.DefaultProfilePrefs()
+	} else {
+		// Регистрация с присланными ответами — это и есть пройденный
+		// онбординг. Регистрация без них оставляет ученика непрошедшим,
+		// и фронт поведёт его на экран настройки.
+		prefs.Onboarded = true
 	}
 	if !prefs.Valid() {
 		return Session{}, domain.ErrInvalid

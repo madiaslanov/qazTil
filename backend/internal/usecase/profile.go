@@ -50,6 +50,10 @@ func (s *ProfileService) Get(ctx context.Context, userID int64) (domain.Profile,
 	if err != nil {
 		return domain.Profile{}, err
 	}
+	daily, err := s.daily(ctx, userID, prefs)
+	if err != nil {
+		return domain.Profile{}, err
+	}
 	return domain.Profile{
 		UserID:      user.ID,
 		Email:       user.Email,
@@ -57,6 +61,7 @@ func (s *ProfileService) Get(ctx context.Context, userID int64) (domain.Profile,
 		CreatedAt:   user.CreatedAt,
 		Prefs:       prefs,
 		Stats:       stats,
+		Daily:       daily,
 	}, nil
 }
 
@@ -82,6 +87,10 @@ func (s *ProfileService) Update(ctx context.Context, userID int64, patch Profile
 	if !prefs.Valid() {
 		return domain.Profile{}, domain.ErrInvalid
 	}
+	// Правка любого из трёх ответов означает, что ученик прошёл онбординг.
+	if patch.DailyGoal != nil || patch.Level != nil || patch.Motivation != nil {
+		prefs.Onboarded = true
+	}
 	if err := s.profiles.Save(ctx, userID, prefs); err != nil {
 		return domain.Profile{}, err
 	}
@@ -96,4 +105,28 @@ func (s *ProfileService) Update(ctx context.Context, userID int64, patch Profile
 		}
 	}
 	return s.Get(ctx, userID)
+}
+
+// Daily is progress against the learner's own goal for their own day.
+func (s *ProfileService) Daily(ctx context.Context, userID int64) (domain.DailyProgress, error) {
+	if userID <= 0 {
+		return domain.DailyProgress{}, domain.ErrInvalid
+	}
+	prefs, err := s.profiles.Get(ctx, userID)
+	if err != nil {
+		return domain.DailyProgress{}, err
+	}
+	return s.daily(ctx, userID, prefs)
+}
+
+// daily fills the goal from the prefs, so the caller gets both what the learner
+// earned and what they were aiming for in one object.
+func (s *ProfileService) daily(ctx context.Context, userID int64, prefs domain.ProfilePrefs) (domain.DailyProgress, error) {
+	daily, err := s.profiles.Daily(ctx, userID, prefs.Timezone, s.now())
+	if err != nil {
+		return domain.DailyProgress{}, err
+	}
+	daily.GoalXP = prefs.DailyGoal
+	daily.GoalMet = prefs.DailyGoal > 0 && daily.XPEarned >= prefs.DailyGoal
+	return daily, nil
 }

@@ -60,10 +60,18 @@ func (m *memUsers) UpdateDisplayName(_ context.Context, id int64, displayName st
 
 type memProfiles struct {
 	items map[int64]domain.ProfilePrefs
+	daily domain.DailyProgress
 }
 
 func newMemProfiles() *memProfiles {
 	return &memProfiles{items: map[int64]domain.ProfilePrefs{}}
+}
+
+func (m *memProfiles) Daily(_ context.Context, userID int64, _ string, _ time.Time) (domain.DailyProgress, error) {
+	if userID <= 0 {
+		return domain.DailyProgress{}, domain.ErrInvalid
+	}
+	return m.daily, nil
 }
 
 func (m *memProfiles) Get(_ context.Context, userID int64) (domain.ProfilePrefs, error) {
@@ -171,8 +179,33 @@ func TestRegisterStoresOnboardingPrefs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("prefs: %v", err)
 	}
-	if stored != prefs {
-		t.Fatalf("prefs = %+v, want %+v", stored, prefs)
+	// Регистрация с присланными ответами — это пройденный онбординг.
+	want := prefs
+	want.Onboarded = true
+	if stored != want {
+		t.Fatalf("prefs = %+v, want %+v", stored, want)
+	}
+}
+
+func TestRegisterWithoutPrefsLeavesLearnerUnonboarded(t *testing.T) {
+	auth, _, profiles := newAuth()
+
+	session, err := auth.Register(context.Background(), "aray@example.com", "qazaqtili2026", "Арай",
+		domain.ProfilePrefs{})
+	if err != nil {
+		t.Fatalf("register: %v", err)
+	}
+	stored, err := profiles.Get(context.Background(), session.User.ID)
+	if err != nil {
+		t.Fatalf("prefs: %v", err)
+	}
+	// Значения по умолчанию получают все, и это не выбор ученика: фронт
+	// должен увести его на экран настройки.
+	if stored.Onboarded {
+		t.Fatalf("ученик без ответов не должен считаться прошедшим онбординг: %+v", stored)
+	}
+	if stored.DailyGoal != domain.DefaultProfilePrefs().DailyGoal {
+		t.Fatalf("prefs = %+v", stored)
 	}
 }
 
