@@ -40,6 +40,8 @@ func writeErr(w http.ResponseWriter, err error) {
 		status, message = http.StatusUnauthorized, "неверная почта или пароль"
 	case errors.Is(err, domain.ErrUnauthorized):
 		status, message = http.StatusUnauthorized, "нужна авторизация"
+	case errors.Is(err, domain.ErrLocked):
+		status, message = http.StatusForbidden, "урок недоступен"
 	case errors.Is(err, domain.ErrNoLives):
 		writeJSON(w, http.StatusConflict, ErrorResponse{Error: "нет жизней", Code: "no_lives"})
 		return

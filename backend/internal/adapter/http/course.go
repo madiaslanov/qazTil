@@ -86,19 +86,30 @@ func (a *API) ListLessons(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} ErrorResponse
 // @Router /lessons/{id} [get]
 func (a *API) GetLesson(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserID(r.Context())
+	if !ok {
+		writeErr(w, domain.ErrUnauthorized)
+		return
+	}
 	id, err := pathID(r)
 	if err != nil {
 		writeErr(w, err)
 		return
 	}
-	item, exercises, err := a.course.OpenLesson(r.Context(), id)
+	view, err := a.path.Lesson(r.Context(), userID, id)
 	if err != nil {
 		writeErr(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, LessonDetailResponse{
-		LessonResponse: toLesson(item),
-		Exercises:      toExercises(exercises),
+		LessonResponse: toLesson(view.Lesson),
+		Exercises:      toExercises(view.Exercises),
+		State:          view.State,
+		ResumePosition: view.ResumePosition,
+		Correct:        view.Correct,
+		Total:          view.Total,
+		Lives:          view.Lives,
+		MaxLives:       view.MaxLives,
 	})
 }
 

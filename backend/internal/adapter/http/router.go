@@ -119,7 +119,7 @@ func NewHandler(api *API, ready func(context.Context) error, webDir string) http
 		r.Get("/units", api.ListUnits)
 		r.Get("/units/{id}", api.GetUnit)
 		r.Get("/units/{id}/lessons", api.ListLessons)
-		r.Get("/lessons/{id}", api.GetLesson)
+		r.With(api.RequireUser).Get("/lessons/{id}", api.GetLesson)
 		r.Get("/lessons/{id}/exercises", api.ListExercises)
 		r.With(api.RequireUser).Post("/exercises/{id}/answers", api.AnswerExercise)
 	})
