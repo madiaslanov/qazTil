@@ -126,13 +126,30 @@ type UnitDetailResponse struct {
 	Lessons []LessonResponse `json:"lessons"`
 } // @name UnitDetailResponse
 
+// ExerciseItemResponse is one labelled piece: an option, a column entry or a
+// tile. The id is local to the exercise, not a database key.
+type ExerciseItemResponse struct {
+	ID   string `json:"id" example:"o1"`
+	Text string `json:"text" example:"Рақмет"`
+} // @name ExerciseItemResponse
+
+// ExerciseResponse never carries the answer key. Only the fields belonging to
+// the exercise's own kind are filled.
 type ExerciseResponse struct {
-	ID       int64    `json:"id" example:"1"`
-	LessonID int64    `json:"lesson_id" example:"1"`
-	Kind     string   `json:"kind" example:"choice" enums:"choice,translate"`
-	Prompt   string   `json:"prompt" example:"Спасибо"`
-	Options  []string `json:"options"`
-	Position int      `json:"position" example:"1"`
+	ID       int64  `json:"id" example:"1"`
+	LessonID int64  `json:"lesson_id" example:"1"`
+	Kind     string `json:"kind" example:"choice" enums:"choice,translate,match,assemble"`
+	Position int    `json:"position" example:"1"`
+	Prompt   string `json:"prompt,omitempty" example:"Спасибо"`
+	// Options belong to a choice exercise.
+	Options []ExerciseItemResponse `json:"options,omitempty"`
+	// PairsLeft and PairsRight belong to a match exercise.
+	PairsLeft  []ExerciseItemResponse `json:"pairs_left,omitempty"`
+	PairsRight []ExerciseItemResponse `json:"pairs_right,omitempty"`
+	// Tiles belong to an assemble exercise.
+	Tiles []ExerciseItemResponse `json:"tiles,omitempty"`
+	// LegacyOptions serves the choice exercises seeded before payload existed.
+	LegacyOptions []string `json:"legacy_options,omitempty"`
 } // @name ExerciseResponse
 
 type LessonDetailResponse struct {
@@ -140,13 +157,30 @@ type LessonDetailResponse struct {
 	Exercises []ExerciseResponse `json:"exercises"`
 } // @name LessonDetailResponse
 
+// ExerciseAnswerRequest carries the answer in the shape the exercise kind
+// calls for. Only the fields of that kind are read.
 type ExerciseAnswerRequest struct {
-	Answer string `json:"answer" example:"Рақмет"`
+	// Kind is optional: it only documents what the client meant to send.
+	Kind string `json:"kind,omitempty" example:"choice" enums:"choice,translate,match,assemble"`
+	// Answer is the typed line of a translate exercise.
+	Answer string `json:"answer,omitempty" example:"Рақмет"`
+	// OptionID is the picked option of a choice exercise.
+	OptionID string `json:"option_id,omitempty" example:"o1"`
+	// Pairs are the connections of a match exercise, as [left, right].
+	Pairs [][2]string `json:"pairs,omitempty"`
+	// TileIDs are the tiles of an assemble exercise, in the learner's order.
+	TileIDs []string `json:"tile_ids,omitempty"`
 } // @name ExerciseAnswerRequest
 
 type ExerciseAnswerResponse struct {
 	Correct  bool   `json:"correct" example:"true"`
 	Expected string `json:"expected" example:"Рақмет"`
+	// Lives left after this answer. A wrong first attempt spends one.
+	Lives    int `json:"lives" example:"4"`
+	MaxLives int `json:"max_lives" example:"5"`
+	// LessonFailed is true when the last life went on this answer: the lesson
+	// stops and has to be started again.
+	LessonFailed bool `json:"lesson_failed" example:"false"`
 } // @name ExerciseAnswerResponse
 
 type LessonProgressResponse struct {

@@ -11,12 +11,12 @@ import (
 
 func TestAnswerSpendsALifeOnlyOnTheFirstMiss(t *testing.T) {
 	now := time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC)
-	course := &memCourse{exercises: []domain.Exercise{{ID: 4, LessonID: 2, Answer: "Рақмет"}}}
+	course := &memCourse{exercises: []domain.Exercise{{ID: 4, LessonID: 2, Kind: domain.ExerciseTranslate, Answer: "Рақмет"}}}
 	stats := &memStats{stats: domain.DefaultStats(7)}
 	svc := NewAttemptService(course, stats)
 	svc.now = func() time.Time { return now }
 
-	result, err := svc.Answer(context.Background(), 7, 4, "жоқ")
+	result, err := svc.Answer(context.Background(), 7, 4, domain.ExerciseAnswer{Text: "жоқ"})
 	if err != nil || result.Correct {
 		t.Fatalf("result = %+v err=%v", result, err)
 	}
@@ -24,7 +24,7 @@ func TestAnswerSpendsALifeOnlyOnTheFirstMiss(t *testing.T) {
 		t.Fatalf("stats = %+v applied=%d", stats.stats, stats.applied)
 	}
 
-	if _, err := svc.Answer(context.Background(), 7, 4, "жоқ"); err != nil {
+	if _, err := svc.Answer(context.Background(), 7, 4, domain.ExerciseAnswer{Text: "жоқ"}); err != nil {
 		t.Fatal(err)
 	}
 	if stats.stats.Lives != 4 {
@@ -33,23 +33,23 @@ func TestAnswerSpendsALifeOnlyOnTheFirstMiss(t *testing.T) {
 }
 
 func TestAnswerAwardsXPOnTheFirstCorrectAttempt(t *testing.T) {
-	course := &memCourse{exercises: []domain.Exercise{{ID: 4, LessonID: 2, Answer: "Рақмет"}}}
+	course := &memCourse{exercises: []domain.Exercise{{ID: 4, LessonID: 2, Kind: domain.ExerciseTranslate, Answer: "Рақмет"}}}
 	stats := &memStats{stats: domain.DefaultStats(7)}
 	svc := NewAttemptService(course, stats)
 	svc.now = func() time.Time { return time.Date(2026, 10, 10, 12, 0, 0, 0, time.UTC) }
 
-	result, err := svc.Answer(context.Background(), 7, 4, "  рақмет ")
+	result, err := svc.Answer(context.Background(), 7, 4, domain.ExerciseAnswer{Text: "  рақмет "})
 	if err != nil || !result.Correct || stats.stats.XP != domain.XPPerFirstCorrect || stats.stats.Lives != domain.MaxLives {
 		t.Fatalf("result = %+v stats = %+v err=%v", result, stats.stats, err)
 	}
 }
 
 func TestAnswerRejectsWhenNoLivesRemain(t *testing.T) {
-	course := &memCourse{exercises: []domain.Exercise{{ID: 4, LessonID: 2, Answer: "Рақмет"}}}
+	course := &memCourse{exercises: []domain.Exercise{{ID: 4, LessonID: 2, Kind: domain.ExerciseTranslate, Answer: "Рақмет"}}}
 	stats := &memStats{stats: domain.LearnerStats{UserID: 7, Lives: 0, MaxLives: domain.MaxLives}, refuse: true}
 	svc := NewAttemptService(course, stats)
 
-	_, err := svc.Answer(context.Background(), 7, 4, "рақмет")
+	_, err := svc.Answer(context.Background(), 7, 4, domain.ExerciseAnswer{Text: "рақмет"})
 	if !errors.Is(err, domain.ErrNoLives) || stats.applied != 0 {
 		t.Fatalf("err = %v applied=%d", err, stats.applied)
 	}

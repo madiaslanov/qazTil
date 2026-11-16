@@ -25,24 +25,47 @@ func (s *AttemptService) Stats(ctx context.Context, userID int64) (domain.Learne
 	return s.stats.Current(ctx, userID, s.now())
 }
 
+// AttemptResult is what the learner sees after one answer: whether it was
+// right, the line they were after, and the state the answer left them in.
+type AttemptResult struct {
+	Correct      bool
+	Expected     string
+	Lives        int
+	MaxLives     int
+	LessonFailed bool
+}
+
 // Answer stores one attempt. The first wrong attempt spends a life.
 // A correct first attempt awards XP. No lives means the attempt is refused.
-func (s *AttemptService) Answer(ctx context.Context, userID, exerciseID int64, answer string) (CheckResult, error) {
+//
+// The answer arrives in the shape its exercise kind calls for, so a match
+// exercise is never compared as a string.
+func (s *AttemptService) Answer(ctx context.Context, userID, exerciseID int64, answer domain.ExerciseAnswer) (AttemptResult, error) {
 	if userID <= 0 || exerciseID <= 0 {
-		return CheckResult{}, domain.ErrInvalid
+		return AttemptResult{}, domain.ErrInvalid
 	}
 	exercise, err := s.course.GetExercise(ctx, exerciseID)
 	if err != nil {
-		return CheckResult{}, err
+		return AttemptResult{}, err
 	}
-	got := normalizeAnswer(answer)
-	want := normalizeAnswer(exercise.Answer)
-	if got == "" || want == "" {
-		return CheckResult{}, domain.ErrInvalid
+	correct, expected, err := domain.CheckAnswer(exercise, answer)
+	if err != nil {
+		return AttemptResult{}, err
 	}
-	correct := got == want
 	if err := s.stats.Apply(ctx, userID, exercise.ID, exercise.LessonID, correct, s.now()); err != nil {
-		return CheckResult{}, err
+		return AttemptResult{}, err
 	}
-	return CheckResult{Correct: correct, Expected: exercise.Answer}, nil
+	stats, err := s.stats.Current(ctx, userID, s.now())
+	if err != nil {
+		return AttemptResult{}, err
+	}
+	return AttemptResult{
+		Correct:  correct,
+		Expected: expected,
+		Lives:    stats.Lives,
+		MaxLives: stats.MaxLives,
+		// Out of lives after a wrong answer means the lesson stops here:
+		// the learner has to start it again.
+		LessonFailed: !correct && stats.Lives == 0,
+	}, nil
 }
