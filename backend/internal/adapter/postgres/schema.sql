@@ -131,3 +131,26 @@ CREATE TABLE IF NOT EXISTS learner_profiles (
     level TEXT NOT NULL DEFAULT 'A0',
     motivation TEXT NOT NULL DEFAULT 'life'
 );
+
+-- QAZ-10. Упражнения на сопоставление и сборку фразы.
+--
+-- payload держит всё, что видит клиент, в форме своего типа: варианты для
+-- choice, две колонки для match, плитки для assemble. Ключ ответа остаётся
+-- в answer и в payload не попадает никогда, поэтому упражнение физически
+-- нельзя отдать вместе с правильным ответом.
+--
+-- Значения заданы через TEXT и CHECK, а не ENUM: Migrate режет этот файл по
+-- точке с запятой и выполняет куски по отдельности, блоки DO тут не работают.
+
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS payload JSONB NOT NULL DEFAULT '{}';
+
+-- QAZ-2. Онбординг должен влиять на путь: уровень задаёт точку входа,
+-- тема — порядок юнитов под мотивацию ученика.
+
+ALTER TABLE units ADD COLUMN IF NOT EXISTS level TEXT NOT NULL DEFAULT 'A0'
+    CHECK (level IN ('A0', 'A1', 'A2', 'B1', 'B2'));
+
+ALTER TABLE units ADD COLUMN IF NOT EXISTS topic TEXT
+    CHECK (topic IN ('work', 'study', 'life'));
+
+CREATE INDEX IF NOT EXISTS idx_units_level ON units(level, position);
