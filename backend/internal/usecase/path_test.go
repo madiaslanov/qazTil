@@ -53,7 +53,8 @@ func TestPathRejectsMissingUser(t *testing.T) {
 }
 
 type memCourseProgress struct {
-	items domain.CourseProgress
+	items  domain.CourseProgress
+	resume int
 }
 
 func (m *memCourseProgress) List(_ context.Context, userID int64) (domain.CourseProgress, error) {
@@ -61,4 +62,23 @@ func (m *memCourseProgress) List(_ context.Context, userID int64) (domain.Course
 		return domain.CourseProgress{}, domain.ErrInvalid
 	}
 	return m.items, nil
+}
+
+func (m *memCourseProgress) Lesson(_ context.Context, userID, lessonID int64) (domain.LessonProgress, error) {
+	if userID <= 0 {
+		return domain.LessonProgress{}, domain.ErrInvalid
+	}
+	for _, item := range m.items.Lessons {
+		if item.LessonID == lessonID {
+			return item, nil
+		}
+	}
+	return domain.LessonProgress{LessonID: lessonID}, nil
+}
+
+func (m *memCourseProgress) ResumePosition(_ context.Context, userID, _ int64) (int, error) {
+	if userID <= 0 {
+		return 0, domain.ErrInvalid
+	}
+	return m.resume, nil
 }
