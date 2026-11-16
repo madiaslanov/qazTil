@@ -166,11 +166,16 @@ func (a *API) AnswerExercise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, ExerciseAnswerResponse{
-		Correct:      result.Correct,
-		Expected:     result.Expected,
-		Lives:        result.Lives,
-		MaxLives:     result.MaxLives,
-		LessonFailed: result.LessonFailed,
+		Correct:         result.Correct,
+		Expected:        result.Expected,
+		Lives:           result.Lives,
+		MaxLives:        result.MaxLives,
+		LessonFailed:    result.LessonFailed,
+		LessonCompleted: result.LessonCompleted,
+		XPEarned:        result.XPEarned,
+		Streak:          result.Streak,
+		StreakIncreased: result.StreakIncreased,
+		NextLessonID:    result.NextLessonID,
 	})
 }
 

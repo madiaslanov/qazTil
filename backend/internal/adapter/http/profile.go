@@ -61,6 +61,7 @@ func (a *API) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 func toProfile(profile domain.Profile) ProfileResponse {
 	stats := toStats(profile.Stats)
+	stats.Today = toDaily(profile.Daily)
 	return ProfileResponse{
 		ID:           profile.UserID,
 		Email:        profile.Email,
@@ -75,6 +76,17 @@ func toProfile(profile domain.Profile) ProfileResponse {
 		NextLifeAt:   stats.NextLifeAt,
 		Streak:       stats.Streak,
 		LastLessonOn: stats.LastLessonOn,
+		Onboarded:    profile.Prefs.Onboarded,
+		Timezone:     profile.Prefs.Timezone,
+	}
+}
+
+func toDaily(daily domain.DailyProgress) DailyResponse {
+	return DailyResponse{
+		Date:     daily.Date,
+		XPEarned: daily.XPEarned,
+		GoalXP:   daily.GoalXP,
+		GoalMet:  daily.GoalMet,
 	}
 }
 

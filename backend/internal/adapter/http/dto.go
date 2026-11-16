@@ -181,6 +181,15 @@ type ExerciseAnswerResponse struct {
 	// LessonFailed is true when the last life went on this answer: the lesson
 	// stops and has to be started again.
 	LessonFailed bool `json:"lesson_failed" example:"false"`
+	// LessonCompleted is true once every exercise of the lesson has an answer.
+	LessonCompleted bool `json:"lesson_completed" example:"false"`
+	// XPEarned is what this single answer added, not the running total.
+	XPEarned int `json:"xp_earned" example:"5"`
+	Streak   int `json:"streak" example:"4"`
+	// StreakIncreased is false when a lesson was already finished today.
+	StreakIncreased bool `json:"streak_increased" example:"false"`
+	// NextLessonID is the lesson that opened up, null at the end of the path.
+	NextLessonID *int64 `json:"next_lesson_id"`
 } // @name ExerciseAnswerResponse
 
 type LessonProgressResponse struct {
@@ -234,7 +243,18 @@ type StatsResponse struct {
 	NextLifeAt   *time.Time `json:"next_life_at"`
 	Streak       int        `json:"streak" example:"3"`
 	LastLessonOn *string    `json:"last_lesson_on" example:"2026-10-10"`
+	// Today is progress against the daily goal, counted in the learner's own
+	// day rather than the server's.
+	Today DailyResponse `json:"today"`
 } // @name StatsResponse
+
+// DailyResponse is how far the learner got today against the goal they set.
+type DailyResponse struct {
+	Date     string `json:"date" example:"2026-11-16"`
+	XPEarned int    `json:"xp_earned" example:"10"`
+	GoalXP   int    `json:"goal_xp" example:"10"`
+	GoalMet  bool   `json:"goal_met" example:"true"`
+} // @name DailyResponse
 
 type RegisterRequest struct {
 	Email       string  `json:"email" example:"aidana@example.com"`
@@ -277,6 +297,11 @@ type ProfileResponse struct {
 	NextLifeAt   *time.Time `json:"next_life_at"`
 	Streak       int        `json:"streak" example:"3"`
 	LastLessonOn *string    `json:"last_lesson_on" example:"2026-10-10"`
+	// Onboarded is false while the prefs are only the defaults: send the
+	// learner to the setup screen.
+	Onboarded bool `json:"onboarded" example:"true"`
+	// Timezone is the IANA zone the learner's day is measured in.
+	Timezone string `json:"timezone" example:"Asia/Almaty"`
 } // @name ProfileResponse
 
 type ProfileUpdateRequest struct {

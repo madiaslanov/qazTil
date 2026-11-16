@@ -48,7 +48,14 @@ func (a *API) Stats(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, toStats(stats))
+	out := toStats(stats)
+	daily, err := a.profile.Daily(r.Context(), userID)
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	out.Today = toDaily(daily)
+	writeJSON(w, http.StatusOK, out)
 }
 
 func toCourseProgress(progress domain.CourseProgress) ProgressResponse {
