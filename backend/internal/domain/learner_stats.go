@@ -9,6 +9,8 @@ const (
 	LifeRecovery = 30 * time.Minute
 	// XPPerFirstCorrect is awarded only for a correct first attempt.
 	XPPerFirstCorrect = 5
+	// DefaultTimezone measures a learner's day when they have not set one.
+	DefaultTimezone = "Asia/Almaty"
 )
 
 // LearnerStats is the server-side reserve of XP, lives and streak.

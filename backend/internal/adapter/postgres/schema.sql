@@ -154,3 +154,16 @@ ALTER TABLE units ADD COLUMN IF NOT EXISTS topic TEXT
     CHECK (topic IN ('work', 'study', 'life'));
 
 CREATE INDEX IF NOT EXISTS idx_units_level ON units(level, position);
+
+-- QAZ-2. Флаг прохождения онбординга и часовой пояс ученика.
+--
+-- onboarded_at отличает ученика, который осознанно выбрал уровень и цель, от
+-- того, кому проставились значения по умолчанию. Без него фронт не знает,
+-- вести ли на /setup.
+--
+-- timezone нужен дневной цели и стрику: день у ученика заканчивается по его
+-- местному времени, а не по UTC сервера.
+
+ALTER TABLE learner_profiles ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
+
+ALTER TABLE learner_profiles ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Asia/Almaty';

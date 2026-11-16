@@ -35,6 +35,8 @@ type UserRepository interface {
 type ProfileRepository interface {
 	Get(ctx context.Context, userID int64) (ProfilePrefs, error)
 	Save(ctx context.Context, userID int64, prefs ProfilePrefs) error
+	// Daily counts what the learner earned inside their own day.
+	Daily(ctx context.Context, userID int64, zone string, now time.Time) (DailyProgress, error)
 }
 
 // QuizRepository stores practice sessions.
@@ -59,6 +61,10 @@ type SituationRepository interface {
 
 // CourseProgressRepository reads lesson and unit progress for one learner.
 type CourseProgressRepository interface {
+	// Lesson reports one lesson's progress for one learner.
+	Lesson(ctx context.Context, userID, lessonID int64) (LessonProgress, error)
+	// ResumePosition is where the learner stopped inside a lesson.
+	ResumePosition(ctx context.Context, userID, lessonID int64) (int, error)
 	List(ctx context.Context, userID int64) (CourseProgress, error)
 }
 
