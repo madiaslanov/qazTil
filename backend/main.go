@@ -99,7 +99,7 @@ func main() {
 		usecase.NewProgressService(courseProgress),
 		usecase.NewSituationService(situations),
 		usecase.NewCourseService(course),
-		usecase.NewPathService(course, courseProgress),
+		usecase.NewPathService(course, courseProgress, learner),
 		usecase.NewAttemptService(course, learner, courseProgress),
 		usecase.NewAuthService(users, profiles, hasher, tokens),
 		usecase.NewProfileService(users, profiles, learner),
