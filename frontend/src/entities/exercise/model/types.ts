@@ -40,13 +40,17 @@ export type AssembleExercise = ExerciseBase & {
 /**
  * Сцена: собеседник говорит реплику (prompt, по-казахски), ученик собирает
  * ответ из слов, как в assemble. hint — русский смысл реплики, чтобы можно
- * было следить за сценой.
+ * было следить за сценой. Верных ответов несколько: сервер принимает любой.
  */
 export type DialogueExercise = ExerciseBase & {
   kind: "dialogue";
   prompt: string;
   speaker: string;
   hint: string;
+  /** Что нужно сказать, по-русски: «Закажи чай и самсу». */
+  goal: string;
+  /** Необязательная подсказка к сложной реплике: смысл слов, не ответ. */
+  help?: string;
   tiles: ExerciseItem[];
 };
 

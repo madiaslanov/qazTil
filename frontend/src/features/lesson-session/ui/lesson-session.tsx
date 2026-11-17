@@ -14,7 +14,7 @@ import {
 } from "../model/use-lesson-session";
 import { AnswerFeedback } from "./answer-feedback";
 import { AnswerTile } from "./answer-tile";
-import { DialogueChat } from "./dialogue-chat";
+import { DialogueChat, DialogueHelp } from "./dialogue-chat";
 import { LessonHeader } from "./lesson-header";
 import { LivesOut } from "./lives-out";
 import { MatchBoard } from "./match-board";
@@ -33,7 +33,7 @@ function headingOf(step: Exercise) {
         title: `«${step.prompt}»`,
       };
     case "dialogue":
-      return { eyebrow: "Диалог", title: "Собери ответ" };
+      return { eyebrow: "Твоя цель", title: step.goal };
     // У этих двух типов задание целиком в prompt: «Соберите: «…»».
     case "assemble":
       return { eyebrow: "Собери фразу", title: step.prompt };
@@ -172,7 +172,10 @@ export function LessonSession({
           </div>
 
           {step.kind === "dialogue" && (
-            <DialogueChat turns={session.turns} step={step} />
+            <>
+              <DialogueChat turns={session.turns} step={step} />
+              {step.help && <DialogueHelp key={step.id} text={step.help} />}
+            </>
           )}
 
           {step.kind === "choice" && (

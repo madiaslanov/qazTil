@@ -135,7 +135,9 @@ export function useLessonSession(lesson: Lesson) {
           speaker: step.speaker,
           line: step.prompt,
           hint: step.hint,
-          reply: result.expected,
+          // Ошибка присылает все подходящие ответы через « / »: в историю
+          // сцены берём первый, это самый простой.
+          reply: result.expected.split(" / ")[0],
         },
       ]);
     }

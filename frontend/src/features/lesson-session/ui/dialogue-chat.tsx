@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Lightbulb } from "lucide-react";
 
 import type { DialogueExercise } from "@/entities/exercise";
 import { cn } from "@/shared/lib/cn";
@@ -72,6 +73,30 @@ export function DialogueChat({
       ))}
       <Bubble speaker={step.speaker} line={step.prompt} hint={step.hint} />
       <div ref={end} />
+    </div>
+  );
+}
+
+/** Подсказка к сложной реплике: прячется за кнопкой, пока ученик не попросит. */
+export function DialogueHelp({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex items-center gap-1.5 self-start text-caption font-bold text-primary outline-none"
+      >
+        <Lightbulb className="size-4" />
+        {open ? "Скрыть подсказку" : "Подсказка"}
+      </button>
+      {open && (
+        <p className="rounded-control bg-highlight-soft px-3.5 py-2.5 text-caption text-foreground">
+          {text}
+        </p>
+      )}
     </div>
   );
 }
