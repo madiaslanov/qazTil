@@ -11,9 +11,12 @@ const icons = {
 } as const;
 
 const circles: Record<SkillState, string> = {
-  completed: "size-15.5 bg-primary text-primary-foreground",
-  current: "size-19 bg-highlight-strong text-foreground shadow-glow",
-  locked: "size-15.5 bg-glow text-black",
+  completed:
+    "size-15.5 border-2 border-surface bg-primary text-primary-foreground shadow-chip",
+  current:
+    "size-19 border-4 border-surface bg-highlight-strong text-foreground shadow-glow",
+  // Светлый кружок легко тонет в фоновых пятнах: белая обводка и тень его держат.
+  locked: "size-15.5 border-2 border-surface bg-glow text-black shadow-chip",
 };
 
 /** Узел пути: пройдено, текущий урок или закрыто. Закрытый не нажимается. */
