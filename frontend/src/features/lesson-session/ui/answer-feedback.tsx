@@ -4,6 +4,7 @@ import { Check, Volume2, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import { canSpeak, speak } from "@/shared/lib/speech";
+import { capitalize } from "@/shared/lib/text";
 import { Button } from "@/shared/ui";
 
 const copy = {
@@ -89,7 +90,7 @@ export function AnswerFeedback({
             {text.note}
           </p>
           <p lang="kk" className="text-lead text-primary">
-            {answer}
+            {capitalize(answer)}
           </p>
         </div>
         {speakable && canSpeak() && (

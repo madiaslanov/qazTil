@@ -3,6 +3,7 @@ import { Lightbulb } from "lucide-react";
 
 import type { DialogueExercise } from "@/entities/exercise";
 import { cn } from "@/shared/lib/cn";
+import { capitalize } from "@/shared/lib/text";
 
 import type { DialogueTurn } from "../model/use-lesson-session";
 
@@ -68,7 +69,7 @@ export function DialogueChat({
       {turns.map((turn, index) => (
         <div key={index} className="flex flex-col gap-3">
           <Bubble speaker={turn.speaker} line={turn.line} dim />
-          <Bubble speaker="Ты" line={turn.reply} mine />
+          <Bubble speaker="Ты" line={capitalize(turn.reply)} mine />
         </div>
       ))}
       <Bubble speaker={step.speaker} line={step.prompt} hint={step.hint} />

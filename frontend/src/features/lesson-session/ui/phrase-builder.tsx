@@ -2,6 +2,8 @@
 
 import type { ExerciseItem } from "@/entities/exercise";
 
+import { capitalize } from "@/shared/lib/text";
+
 import { WordChip } from "./word-chip";
 
 /** «Собери фразу»: плитки из банка переносятся в ответ и обратно. */
@@ -28,10 +30,15 @@ export function PhraseBuilder({
           <span className="h-0.5 rounded-full bg-line" />
         </div>
         <div className="relative flex flex-wrap gap-2" aria-label="Твой ответ">
-          {value.map((id) => (
+          {value.map((id, position) => (
             <WordChip
               key={id}
-              text={byId.get(id)?.text ?? ""}
+              // Плитки строчные; в ответе фраза открывается заглавной.
+              text={
+                position === 0
+                  ? capitalize(byId.get(id)?.text ?? "")
+                  : (byId.get(id)?.text ?? "")
+              }
               placed
               disabled={disabled}
               onClick={() => onChange((ids) => ids.filter((item) => item !== id))}
