@@ -4,6 +4,7 @@ import (
 	"hash/fnv"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 /*
@@ -33,6 +34,26 @@ func placeAnswer(seed, answer string, wrong []string) []string {
 	return out
 }
 
+// proper — слова, которые остаются с заглавной буквы и в середине фразы.
+var proper = map[string]bool{"Kaspi": true, "IT": true, "Арман": true, "Айдана": true}
+
+// tileText приводит слово к виду плитки: строчные буквы, как в Duolingo.
+// Заглавная в начале фразы была бы подсказкой и портила середину ответа
+// («мынаны» вместо «Мынаны»), поэтому первое слово ученик получит с заглавной
+// уже на экране. Имена и сокращения вроде «QR-мен» остаются как есть.
+func tileText(word string) string {
+	if proper[word] {
+		return word
+	}
+	runes := []rune(word)
+	for _, r := range runes[1:] {
+		if unicode.IsUpper(r) {
+			return word
+		}
+	}
+	return strings.ToLower(word)
+}
+
 // ch — выбор казахской фразы по русской.
 func ch(prompt, answer string, wrong ...string) courseExercise {
 	return courseExercise{
@@ -45,6 +66,12 @@ func ch(prompt, answer string, wrong ...string) courseExercise {
 // а порядок плиток не совпадает с верным.
 func build(ru, kk string, extra ...string) courseExercise {
 	words := strings.Fields(kk)
+	for i, word := range words {
+		words[i] = tileText(word)
+	}
+	for i, word := range extra {
+		extra[i] = tileText(word)
+	}
 	bank := append(append([]string{}, words...), extra...)
 	// Стабильная перестановка по хэшу слова и места.
 	for i := len(bank) - 1; i > 0; i-- {
@@ -176,7 +203,7 @@ func fillScene(e *courseExercise, pool []string) {
 			seen[key]++
 			if seen[key] > have[key] {
 				have[key]++
-				bank = append(bank, word)
+				bank = append(bank, tileText(word))
 			}
 		}
 	}
@@ -193,7 +220,7 @@ func fillScene(e *courseExercise, pool []string) {
 	}
 	for picked := 0; picked < 2 && len(extra) > 0; picked++ {
 		at := spin(e.prompt+strings.Repeat("+", picked)) % len(extra)
-		bank = append(bank, extra[at])
+		bank = append(bank, tileText(extra[at]))
 		extra = append(extra[:at], extra[at+1:]...)
 	}
 	for k := len(bank) - 1; k > 0; k-- {
