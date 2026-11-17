@@ -1,31 +1,71 @@
 /*
- * Упражнения урока. Формы совпадают с контрактом бэкенда (BE-1/BE-2):
- * когда появится POST /exercises/{id}/answers, поменяется только адаптер.
+ * Упражнения урока — ровно то, что отдаёт GET /lessons/{id}.
+ * Правильного ответа в них нет: проверка на сервере.
+ * Идентификаторы упражнений — числа; id внутри упражнения (вариант, колонка,
+ * плитка) — локальные строки вроде "o1", "l2", "t3".
  */
 
 export type ExerciseItem = { id: string; text: string };
 
-export type MatchExercise = {
-  id: string;
+type ExerciseBase = {
+  id: number;
+  lesson_id: number;
+  position: number;
+};
+
+export type ChoiceExercise = ExerciseBase & {
+  kind: "choice";
+  prompt: string;
+  options: ExerciseItem[];
+};
+
+export type TranslateExercise = ExerciseBase & {
+  kind: "translate";
+  prompt: string;
+};
+
+export type MatchExercise = ExerciseBase & {
   kind: "match";
+  prompt?: string;
   pairs_left: ExerciseItem[];
   pairs_right: ExerciseItem[];
 };
 
-export type AssembleExercise = {
-  id: string;
+export type AssembleExercise = ExerciseBase & {
   kind: "assemble";
   prompt: string;
   tiles: ExerciseItem[];
 };
 
-export type Exercise = MatchExercise | AssembleExercise;
+export type Exercise =
+  | ChoiceExercise
+  | TranslateExercise
+  | MatchExercise
+  | AssembleExercise;
 
+/** Тело POST /exercises/{id}/answers: форма зависит от типа. */
 export type ExerciseAnswer =
+  | { kind: "choice"; option_id: string; answer: string }
+  | { kind: "translate"; answer: string }
   | { kind: "match"; pairs: [string, string][] }
   | { kind: "assemble"; tile_ids: string[] };
 
+/** Один ответ на все типы. `expected` приходит всегда и готово к показу. */
 export type ExerciseResult = {
   correct: boolean;
-  correct_answer: string;
+  expected: string;
+  /** Остаток жизней после этого ответа. */
+  lives: number;
+  max_lives: number;
+  /** Ушла последняя жизнь: урок остановлен. */
+  lesson_failed: boolean;
+  /** На все упражнения урока дан хотя бы один ответ. */
+  lesson_completed: boolean;
+  /** Сколько XP принёс именно этот ответ, а не общая сумма. */
+  xp_earned: number;
+  streak: number;
+  /** false, если урок уже закрывали сегодня. */
+  streak_increased: boolean;
+  /** Открывшийся урок; null в конце пути. */
+  next_lesson_id: number | null;
 };

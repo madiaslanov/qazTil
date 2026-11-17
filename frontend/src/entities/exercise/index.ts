@@ -1,13 +1,10 @@
 export type {
   AssembleExercise,
+  ChoiceExercise,
   Exercise,
   ExerciseAnswer,
   ExerciseItem,
   ExerciseResult,
   MatchExercise,
+  TranslateExercise,
 } from "./model/types";
-export {
-  buildLocalExercises,
-  checkLocalExercise,
-  isLocalPair,
-} from "./api/local-exercises";
