@@ -78,6 +78,7 @@ func toProfile(profile domain.Profile) ProfileResponse {
 		LastLessonOn: stats.LastLessonOn,
 		Onboarded:    profile.Prefs.Onboarded,
 		Timezone:     profile.Prefs.Timezone,
+		Today:        stats.Today,
 	}
 }
 

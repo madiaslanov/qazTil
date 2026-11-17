@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
-import { useLearnerStore } from "@/entities/learner";
+import { profileQueries, useLearnerStore } from "@/entities/learner";
 import { sessionQueries, useSessionStore } from "@/entities/session";
 import { Screen } from "@/shared/ui";
 
@@ -29,9 +29,22 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     enabled: hydrated && session !== null,
   });
 
+  // Профиль говорит, выбирал ли ученик уровень и цель. Значения по умолчанию
+  // проставляются всем при регистрации, поэтому отличить одно от другого
+  // может только сервер.
+  const profile = useQuery({
+    ...profileQueries.current(),
+    enabled: hydrated && session !== null,
+  });
+  const needsOnboarding = profile.data?.onboarded === false;
+
   useEffect(() => {
     if (me.data) setUser(me.data);
   }, [me.data, setUser]);
+
+  useEffect(() => {
+    if (needsOnboarding) router.replace("/setup");
+  }, [needsOnboarding, router]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -45,7 +58,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [hydrated, session, learner, createLearner, router]);
 
-  if (!hydrated || !session || learner?.email !== session.user.email) {
+  // Ждём профиль молча: мигнуть путём обучения и тут же увести на онбординг
+  // хуже, чем показать пустой экран лишнюю долю секунды.
+  if (
+    !hydrated ||
+    !session ||
+    learner?.email !== session.user.email ||
+    needsOnboarding
+  ) {
     return <Screen />;
   }
   return children;

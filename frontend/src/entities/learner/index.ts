@@ -17,6 +17,7 @@ export { useLives } from "./model/use-lives";
 export {
   profileApi,
   profileQueries,
+  type DailyProgress,
   type Profile,
   type ProfileUpdate,
 } from "./api/profile-queries";

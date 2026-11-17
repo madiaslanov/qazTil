@@ -14,7 +14,7 @@ import {
 import { useSignOut } from "@/features/auth";
 import { SWAGGER_URL } from "@/shared/config/env";
 import { cn } from "@/shared/lib/cn";
-import { Button, Card, IconBadge } from "@/shared/ui";
+import { Button, Card, IconBadge, Progress } from "@/shared/ui";
 
 const goals: DailyGoal[] = [5, 10, 15];
 
@@ -33,6 +33,9 @@ export function ProfilePage() {
   });
 
   const dailyGoal = profile.data?.daily_goal;
+  // Прогресс считает сервер в часовом поясе ученика: «сегодня» на клиенте
+  // и на сервере — разные дни для всех, кто занимается поздно вечером.
+  const today = profile.data?.today;
   const busy = profile.isPending || updateGoal.isPending;
 
   return (
@@ -83,9 +86,33 @@ export function ProfilePage() {
       </Card>
 
       <Card className="flex flex-col gap-3 p-5">
-        <p className="text-eyebrow font-bold uppercase text-muted">
-          Ежедневная цель
-        </p>
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-eyebrow font-bold uppercase text-muted">
+            Ежедневная цель
+          </p>
+          {today ? (
+            <p className="text-body-sm font-extrabold text-heading">
+              {today.goal_met ? "Цель на сегодня закрыта" : null}
+            </p>
+          ) : null}
+        </div>
+        {today ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-body-sm text-muted">Сегодня</span>
+              <span className="text-body-sm font-extrabold text-heading">
+                {today.xp_earned} / {today.goal_xp} XP
+              </span>
+            </div>
+            <Progress
+              value={
+                today.goal_xp > 0
+                  ? Math.min(100, (today.xp_earned / today.goal_xp) * 100)
+                  : 0
+              }
+            />
+          </div>
+        ) : null}
         <div className="flex gap-2.5">
           {goals.map((goal) => (
             <button
@@ -101,7 +128,7 @@ export function ProfilePage() {
                   : "bg-background",
               )}
             >
-              {goal} мин
+              {goal} XP
             </button>
           ))}
         </div>

@@ -4,6 +4,14 @@ import { request } from "@/shared/api";
 
 import type { DailyGoal, Level, Motivation } from "../model/types";
 
+/** Прогресс против дневной цели, посчитанный в часовом поясе ученика. */
+export type DailyProgress = {
+  date: string;
+  xp_earned: number;
+  goal_xp: number;
+  goal_met: boolean;
+};
+
 /** Ответ GET/PUT /me/profile. */
 export type Profile = {
   id: number;
@@ -19,6 +27,14 @@ export type Profile = {
   next_life_at: string | null;
   streak: number;
   last_lesson_on: string | null;
+  /**
+   * false, пока настройки остаются значениями по умолчанию: их получают все
+   * при регистрации, и это ещё не выбор ученика. Сигнал увести на /setup.
+   */
+  onboarded: boolean;
+  /** Зона IANA, в которой у ученика считается день. */
+  timezone: string;
+  today: DailyProgress;
 };
 
 export type ProfileUpdate = {
