@@ -42,11 +42,7 @@ func (e courseExercise) payload() (string, string, error) {
 	out := map[string]any{}
 	key := e.answer
 	switch e.kind {
-	case "choice", "dialogue":
-		if e.kind == "dialogue" {
-			out["speaker"] = e.speaker
-			out["hint"] = e.hint
-		}
+	case "choice":
 		if len(e.options) > 0 && len(e.pairsLeft) == 0 {
 			items := make([]seedItem, 0, len(e.options))
 			for i, text := range e.options {
@@ -70,7 +66,11 @@ func (e courseExercise) payload() (string, string, error) {
 			return "", "", err
 		}
 		key = string(raw)
-	case "assemble":
+	case "assemble", "dialogue":
+		if e.kind == "dialogue" {
+			out["speaker"] = e.speaker
+			out["hint"] = e.hint
+		}
 		out["tiles"] = jsonItems(e.tiles)
 		raw, err := json.Marshal(e.order)
 		if err != nil {

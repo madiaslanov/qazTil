@@ -145,12 +145,12 @@ type ExerciseResponse struct {
 	// line, the hint is its Russian meaning.
 	Speaker string `json:"speaker,omitempty" example:"Даяшы"`
 	Hint    string `json:"hint,omitempty" example:"Здравствуйте, что желаете?"`
-	// Options belong to a choice or dialogue exercise.
+	// Options belong to a choice exercise.
 	Options []ExerciseItemResponse `json:"options,omitempty"`
 	// PairsLeft and PairsRight belong to a match exercise.
 	PairsLeft  []ExerciseItemResponse `json:"pairs_left,omitempty"`
 	PairsRight []ExerciseItemResponse `json:"pairs_right,omitempty"`
-	// Tiles belong to an assemble exercise.
+	// Tiles belong to an assemble or dialogue exercise.
 	Tiles []ExerciseItemResponse `json:"tiles,omitempty"`
 	// LegacyOptions serves the choice exercises seeded before payload existed.
 	LegacyOptions []string `json:"legacy_options,omitempty"`

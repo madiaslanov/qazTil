@@ -252,7 +252,7 @@ func toExercise(item domain.Exercise) ExerciseResponse {
 			out.LegacyOptions = item.Options
 		}
 	case domain.ExerciseDialogue:
-		out.Options = toItems(payload.Options)
+		out.Tiles = toItems(payload.Tiles)
 		out.Speaker = payload.Speaker
 		out.Hint = payload.Hint
 	case domain.ExerciseMatch:

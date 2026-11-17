@@ -53,7 +53,7 @@ func KnownExerciseKind(kind string) bool {
 // the payload the client receives simply has no room for it.
 func CheckAnswer(exercise Exercise, answer ExerciseAnswer) (bool, string, error) {
 	switch exercise.Kind {
-	case ExerciseChoice, ExerciseDialogue:
+	case ExerciseChoice:
 		return checkChoice(exercise, answer)
 	case ExerciseTranslate:
 		got, want := normalizeLine(answer.Text), normalizeLine(exercise.Answer)
@@ -63,7 +63,7 @@ func CheckAnswer(exercise Exercise, answer ExerciseAnswer) (bool, string, error)
 		return got == want, exercise.Answer, nil
 	case ExerciseMatch:
 		return checkMatch(exercise, answer)
-	case ExerciseAssemble:
+	case ExerciseAssemble, ExerciseDialogue:
 		return checkAssemble(exercise, answer)
 	}
 	return false, "", ErrInvalid

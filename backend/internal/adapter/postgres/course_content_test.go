@@ -42,7 +42,7 @@ func checkExercise(t *testing.T, id string, e courseExercise) {
 	switch e.kind {
 	case "translate":
 		t.Errorf("%s: печатать перевод больше не нужно", id)
-	case "choice", "dialogue":
+	case "choice":
 		count := 0
 		for _, option := range e.options {
 			if option == e.answer {
@@ -62,20 +62,22 @@ func checkExercise(t *testing.T, id string, e courseExercise) {
 			}
 			unique[option] = true
 		}
+	case "assemble", "dialogue":
 		if e.kind == "dialogue" && (e.speaker == "" || e.hint == "") {
 			t.Errorf("%s: у реплики нет говорящего или подсказки", id)
 		}
-	case "assemble":
 		payload, key, err := e.payload()
 		if err != nil {
 			t.Fatalf("%s: %v", id, err)
 		}
 		text := map[string]string{}
-		var decoded map[string][]map[string]string
+		var decoded struct {
+			Tiles []map[string]string `json:"tiles"`
+		}
 		if err := json.Unmarshal([]byte(payload), &decoded); err != nil {
 			t.Fatalf("%s: %v", id, err)
 		}
-		for _, item := range decoded["tiles"] {
+		for _, item := range decoded.Tiles {
 			text[item["id"]] = item["text"]
 		}
 		var order []string
@@ -93,8 +95,8 @@ func checkExercise(t *testing.T, id string, e courseExercise) {
 		if len(text) <= len(order) {
 			t.Errorf("%s: в банке нет лишнего слова", id)
 		}
-		bank := make([]string, 0, len(decoded["tiles"]))
-		for _, item := range decoded["tiles"] {
+		bank := make([]string, 0, len(decoded.Tiles))
+		for _, item := range decoded.Tiles {
 			bank = append(bank, item["text"])
 		}
 		if inOrder(bank, words) {
