@@ -69,7 +69,7 @@ export function DialogueChat({
       {turns.map((turn, index) => (
         <div key={index} className="flex flex-col gap-3">
           <Bubble speaker={turn.speaker} line={turn.line} dim />
-          <Bubble speaker="Ты" line={capitalize(turn.reply)} mine />
+          <Bubble speaker="Вы" line={capitalize(turn.reply)} mine />
         </div>
       ))}
       <Bubble speaker={step.speaker} line={step.prompt} hint={step.hint} />

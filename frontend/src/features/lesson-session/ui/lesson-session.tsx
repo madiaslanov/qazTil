@@ -33,7 +33,7 @@ function headingOf(step: Exercise) {
         title: `«${step.prompt}»`,
       };
     case "dialogue":
-      return { eyebrow: "Твоя цель", title: step.goal };
+      return { eyebrow: "Ваша цель", title: step.goal };
     // У этих двух типов задание целиком в prompt: «Соберите: «…»».
     case "assemble":
       return { eyebrow: "Собери фразу", title: step.prompt };
