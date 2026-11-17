@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -126,8 +128,7 @@ type courseSituation struct {
 	lessons []courseLesson
 }
 
-// SeedCourse inserts situational vocabulary and the unit/lesson/exercise path
-// when the database has no situations yet. Existing category seeds are left alone.
+// defaulted returns fallback for an empty value.
 func defaulted(value, fallback string) string {
 	if value == "" {
 		return fallback
@@ -135,48 +136,74 @@ func defaulted(value, fallback string) string {
 	return value
 }
 
-// SeedCourse inserts every situation the build knows that the database does not
-// have yet, matching on slug. Situations already stored are left untouched,
-// so new content reaches a running deployment without wiping what learners did.
-func SeedCourse(ctx context.Context, db *sql.DB) (bool, error) {
-	known, err := storedSlugs(ctx, db)
-	if err != nil {
-		return false, err
-	}
-	missing := make([]courseSituation, 0, len(courseStarter))
-	for _, situation := range courseStarter {
-		if !known[situation.slug] {
-			missing = append(missing, situation)
-		}
-	}
-	if len(missing) == 0 {
-		return false, nil
-	}
+// courseLockKey serializes course seeding between instances that start at the
+// same time (a deploy overlapping with a restart).
+const courseLockKey = 7_104_001
 
+// courseHash fingerprints the course as it is written in code. Any edit to the
+// lessons, the exercises or their keys changes it, so nobody has to remember
+// to bump a version by hand.
+func courseHash() string {
+	sum := sha256.Sum256([]byte(fmt.Sprintf("%#v", courseStarter)))
+	return hex.EncodeToString(sum[:])
+}
+
+// SeedCourse keeps the stored course equal to the one written in code.
+//
+// When the fingerprint of the code differs from the one stored (or none is
+// stored, as in a database seeded before fingerprints existed), the course is
+// replaced: situations, units, lessons and exercises are rebuilt, and the
+// attempts that pointed at the old exercises go with them. Users, profiles,
+// XP, lives and streaks stay; lesson progress starts over, because it is
+// derived from those attempts.
+//
+// It reports whether anything was written. The work runs in one transaction
+// under an advisory lock, so a failure leaves the old course in place and two
+// instances starting together do not seed twice.
+func SeedCourse(ctx context.Context, db *sql.DB) (bool, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return false, err
 	}
 	defer rollback(tx)
 
-	// Positions continue after what is already stored, so an added unit lands
-	// at the end of the path instead of fighting an existing one for a slot.
-	offset := len(known)
-	for i, situation := range missing {
-		situationID, err := insertSituation(ctx, tx, situation, offset+i+1)
+	if _, err := tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock($1)`, courseLockKey); err != nil {
+		return false, err
+	}
+	want := courseHash()
+	var stored string
+	err = tx.QueryRowContext(ctx, `SELECT value FROM course_meta WHERE key = 'course_hash'`).Scan(&stored)
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+	if stored == want {
+		return false, nil
+	}
+
+	// Everything of the course hangs off situations with ON DELETE CASCADE.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM situations`); err != nil {
+		return false, err
+	}
+	for i, situation := range courseStarter {
+		situationID, err := insertSituation(ctx, tx, situation, i+1)
 		if err != nil {
 			return false, err
 		}
 		if err := insertWords(ctx, tx, situationID, situation.words); err != nil {
 			return false, err
 		}
-		unitID, err := insertUnit(ctx, tx, situationID, situation, offset+i+1)
+		unitID, err := insertUnit(ctx, tx, situationID, situation, i+1)
 		if err != nil {
 			return false, err
 		}
 		if err := insertLessons(ctx, tx, unitID, situation.lessons); err != nil {
 			return false, err
 		}
+	}
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO course_meta (key, value) VALUES ('course_hash', $1)
+		ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, want); err != nil {
+		return false, err
 	}
 	if err := tx.Commit(); err != nil {
 		return false, err
@@ -253,21 +280,3 @@ func insertLessons(ctx context.Context, tx *sql.Tx, unitID int64, lessons []cour
 
 // Путь идёт от A0 к A1: сначала бытовые ситуации, затем работа и учёба.
 var courseStarter = append(append([]courseSituation{}, courseLife...), courseWork, courseStudy)
-
-// storedSlugs lists the situations already in the database.
-func storedSlugs(ctx context.Context, db *sql.DB) (map[string]bool, error) {
-	rows, err := db.QueryContext(ctx, `SELECT slug FROM situations`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	out := map[string]bool{}
-	for rows.Next() {
-		var slug string
-		if err := rows.Scan(&slug); err != nil {
-			return nil, err
-		}
-		out[slug] = true
-	}
-	return out, rows.Err()
-}

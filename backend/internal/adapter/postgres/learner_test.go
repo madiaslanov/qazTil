@@ -61,11 +61,12 @@ func TestAttemptsDriveProgressAndLives(t *testing.T) {
 		t.Fatalf("second miss = %+v err=%v", stats, err)
 	}
 
-	if err := learner.Apply(ctx, userID, exercises[1].ID, exercises[1].LessonID, true, now); err != nil {
-		t.Fatal(err)
-	}
-	if err := learner.Apply(ctx, userID, exercises[2].ID, exercises[2].LessonID, true, now); err != nil {
-		t.Fatal(err)
+	// Размер урока зависит от сида, поэтому отвечаем на все остальные упражнения.
+	n := len(exercises)
+	for _, exercise := range exercises[1:] {
+		if err := learner.Apply(ctx, userID, exercise.ID, exercise.LessonID, true, now); err != nil {
+			t.Fatal(err)
+		}
 	}
 	// The first exercise already has an attempt, so a later correct answer adds no XP,
 	// but it does count as a correct exercise and finishes the lesson.
@@ -76,7 +77,7 @@ func TestAttemptsDriveProgressAndLives(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if stats.XP != domain.XPPerFirstCorrect*2 || stats.Streak != 1 || stats.Lives != 4 {
+	if stats.XP != domain.XPPerFirstCorrect*(n-1) || stats.Streak != 1 || stats.Lives != 4 {
 		t.Fatalf("finished lesson = %+v", stats)
 	}
 
@@ -90,7 +91,7 @@ func TestAttemptsDriveProgressAndLives(t *testing.T) {
 			lesson = item
 		}
 	}
-	if !lesson.Completed || lesson.Correct != 3 || lesson.Total != 3 {
+	if !lesson.Completed || lesson.Correct != n || lesson.Total != n {
 		t.Fatalf("lesson progress = %+v", lesson)
 	}
 	if progress.Units[0].UnitID != units[0].ID || progress.Units[0].CompletedLessons != 1 {
