@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-import type { AssembleExercise, Exercise, MatchExercise } from "@/entities/exercise";
+import type { Exercise, MatchExercise } from "@/entities/exercise";
 import type { Lesson } from "@/entities/lesson";
 import { cn } from "@/shared/lib/cn";
 import { Button, Eyebrow, FieldHint, Input, StateNote } from "@/shared/ui";
@@ -33,7 +33,7 @@ function headingOf(step: Exercise) {
         title: `«${step.prompt}»`,
       };
     case "dialogue":
-      return { eyebrow: "Диалог", title: "Выбери, что ответить" };
+      return { eyebrow: "Диалог", title: "Собери ответ" };
     // У этих двух типов задание целиком в prompt: «Соберите: «…»».
     case "assemble":
       return { eyebrow: "Собери фразу", title: step.prompt };
@@ -125,14 +125,9 @@ export function LessonSession({
         });
         return;
       }
-      case "dialogue": {
-        if (session.selected === null) return;
-        session.submit({
-          kind: "dialogue",
-          option_id: step.options[session.selected].id,
-        });
+      case "dialogue":
+        session.submit({ kind: "dialogue", tile_ids: draft.tiles });
         return;
-      }
       case "translate":
         session.submit({ kind: "translate", answer: draft.text.trim() });
         return;
@@ -146,11 +141,11 @@ export function LessonSession({
   }
 
   const ready =
-    step.kind === "choice" || step.kind === "dialogue"
+    step.kind === "choice"
       ? session.selected !== null
       : step.kind === "translate"
         ? draft.text.trim() !== ""
-        : step.kind === "assemble"
+        : step.kind === "assemble" || step.kind === "dialogue"
           ? draft.tiles.length > 0
           : draft.pairs.length === step.pairs_left.length;
 
@@ -180,7 +175,7 @@ export function LessonSession({
             <DialogueChat turns={session.turns} step={step} />
           )}
 
-          {(step.kind === "choice" || step.kind === "dialogue") && (
+          {step.kind === "choice" && (
             <div className="flex flex-col gap-3">
               {step.options.map((option, index) => (
                 <AnswerTile
@@ -218,9 +213,9 @@ export function LessonSession({
             </form>
           )}
 
-          {step.kind === "assemble" && (
+          {(step.kind === "assemble" || step.kind === "dialogue") && (
             <PhraseBuilder
-              exercise={step as AssembleExercise}
+              exercise={step}
               value={draft.tiles}
               disabled={locked}
               onChange={(update) =>

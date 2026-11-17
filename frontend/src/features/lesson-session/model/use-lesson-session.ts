@@ -163,7 +163,7 @@ export function useLessonSession(lesson: Lesson) {
 
   /** Для выбора подсвечиваем верный вариант по тексту из expected. */
   const correctIndex =
-    checked && (step?.kind === "choice" || step?.kind === "dialogue")
+    checked && step?.kind === "choice"
       ? step.options.findIndex((option) => option.text === result?.expected)
       : -1;
 

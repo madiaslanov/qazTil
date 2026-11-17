@@ -38,15 +38,16 @@ export type AssembleExercise = ExerciseBase & {
 };
 
 /**
- * Сцена: собеседник говорит реплику (prompt, по-казахски), ученик выбирает
- * ответ. hint — русский смысл реплики, чтобы можно было следить за сценой.
+ * Сцена: собеседник говорит реплику (prompt, по-казахски), ученик собирает
+ * ответ из слов, как в assemble. hint — русский смысл реплики, чтобы можно
+ * было следить за сценой.
  */
 export type DialogueExercise = ExerciseBase & {
   kind: "dialogue";
   prompt: string;
   speaker: string;
   hint: string;
-  options: ExerciseItem[];
+  tiles: ExerciseItem[];
 };
 
 export type Exercise =
@@ -59,7 +60,7 @@ export type Exercise =
 /** Тело POST /exercises/{id}/answers: форма зависит от типа. */
 export type ExerciseAnswer =
   | { kind: "choice"; option_id: string; answer: string }
-  | { kind: "dialogue"; option_id: string }
+  | { kind: "dialogue"; tile_ids: string[] }
   | { kind: "translate"; answer: string }
   | { kind: "match"; pairs: [string, string][] }
   | { kind: "assemble"; tile_ids: string[] };

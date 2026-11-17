@@ -1,6 +1,6 @@
 "use client";
 
-import type { AssembleExercise } from "@/entities/exercise";
+import type { ExerciseItem } from "@/entities/exercise";
 
 import { WordChip } from "./word-chip";
 
@@ -11,7 +11,7 @@ export function PhraseBuilder({
   disabled,
   onChange,
 }: {
-  exercise: AssembleExercise;
+  exercise: { tiles: ExerciseItem[] };
   value: string[];
   disabled: boolean;
   /** Обновление через функцию: несколько нажатий подряд не теряются. */
