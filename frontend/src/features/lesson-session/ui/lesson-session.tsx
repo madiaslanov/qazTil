@@ -14,6 +14,7 @@ import {
 } from "../model/use-lesson-session";
 import { AnswerFeedback } from "./answer-feedback";
 import { AnswerTile } from "./answer-tile";
+import { DialogueChat } from "./dialogue-chat";
 import { LessonHeader } from "./lesson-header";
 import { LivesOut } from "./lives-out";
 import { MatchBoard } from "./match-board";
@@ -31,6 +32,8 @@ function headingOf(step: Exercise) {
         eyebrow: "Переведи на казахский",
         title: `«${step.prompt}»`,
       };
+    case "dialogue":
+      return { eyebrow: "Диалог", title: "Выбери, что ответить" };
     // У этих двух типов задание целиком в prompt: «Соберите: «…»».
     case "assemble":
       return { eyebrow: "Собери фразу", title: step.prompt };
@@ -122,6 +125,14 @@ export function LessonSession({
         });
         return;
       }
+      case "dialogue": {
+        if (session.selected === null) return;
+        session.submit({
+          kind: "dialogue",
+          option_id: step.options[session.selected].id,
+        });
+        return;
+      }
       case "translate":
         session.submit({ kind: "translate", answer: draft.text.trim() });
         return;
@@ -135,7 +146,7 @@ export function LessonSession({
   }
 
   const ready =
-    step.kind === "choice"
+    step.kind === "choice" || step.kind === "dialogue"
       ? session.selected !== null
       : step.kind === "translate"
         ? draft.text.trim() !== ""
@@ -165,7 +176,11 @@ export function LessonSession({
             <h1 className="text-h2 text-foreground">{heading.title}</h1>
           </div>
 
-          {step.kind === "choice" && (
+          {step.kind === "dialogue" && (
+            <DialogueChat turns={session.turns} step={step} />
+          )}
+
+          {(step.kind === "choice" || step.kind === "dialogue") && (
             <div className="flex flex-col gap-3">
               {step.options.map((option, index) => (
                 <AnswerTile

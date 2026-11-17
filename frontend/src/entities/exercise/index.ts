@@ -1,6 +1,7 @@
 export type {
   AssembleExercise,
   ChoiceExercise,
+  DialogueExercise,
   Exercise,
   ExerciseAnswer,
   ExerciseItem,

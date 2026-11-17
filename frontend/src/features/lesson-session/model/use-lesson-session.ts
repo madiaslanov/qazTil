@@ -23,6 +23,14 @@ export type LessonSummary = {
   total: number;
 };
 
+/** Уже сыгранная реплика сцены: что сказал собеседник и что ответил ученик. */
+export type DialogueTurn = {
+  speaker: string;
+  line: string;
+  hint: string;
+  reply: string;
+};
+
 function messageOf(cause: unknown, fallback: string) {
   return cause instanceof ApiError ? cause.message : fallback;
 }
@@ -47,6 +55,8 @@ export function useLessonSession(lesson: Lesson) {
   /** Растёт при повторе: сбрасывает состояние упражнения. */
   const [attempt, setAttempt] = useState(0);
   const [lives, setLives] = useState(lesson.lives);
+  /** Реплики сцены, которые ученик уже прошёл в этом заходе. */
+  const [turns, setTurns] = useState<DialogueTurn[]>([]);
   const [failed, setFailed] = useState(false);
   const [finished, setFinished] = useState(false);
   const [summary, setSummary] = useState<LessonSummary>({
@@ -117,6 +127,18 @@ export function useLessonSession(lesson: Lesson) {
       setFailed(true);
       return;
     }
+    // Реплика уходит в историю с верным ответом, который отдал сервер.
+    if (step?.kind === "dialogue" && result) {
+      setTurns((previous) => [
+        ...previous,
+        {
+          speaker: step.speaker,
+          line: step.prompt,
+          hint: step.hint,
+          reply: result.expected,
+        },
+      ]);
+    }
     setSelected(null);
     setResult(null);
     setAttempt(0);
@@ -134,14 +156,14 @@ export function useLessonSession(lesson: Lesson) {
       return;
     }
     setIndex(index + 1);
-  }, [index, queryClient, result, total]);
+  }, [index, queryClient, result, step, total]);
 
   const status = failed ? "failed" : finished ? "finished" : "running";
   const checked = phase === "feedback";
 
   /** Для выбора подсвечиваем верный вариант по тексту из expected. */
   const correctIndex =
-    checked && step?.kind === "choice"
+    checked && (step?.kind === "choice" || step?.kind === "dialogue")
       ? step.options.findIndex((option) => option.text === result?.expected)
       : -1;
 
@@ -149,6 +171,7 @@ export function useLessonSession(lesson: Lesson) {
     status,
     error: answer.isError && !failed ? messageOf(answer.error, "ответ не сохранился") : null,
     step,
+    turns,
     index,
     total,
     attempt,
