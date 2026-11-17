@@ -1,14 +1,10 @@
 import { Fragment } from "react";
 
-import type { Category } from "@/entities/category";
-import { levelAt, type CourseLevel } from "@/entities/learner";
+import type { PathLesson, PathUnit } from "@/entities/path";
 import { cn } from "@/shared/lib/cn";
+import { Eyebrow } from "@/shared/ui";
 
-import { ModuleTransition } from "./module-transition";
-import { SkillNode, type SkillState } from "./skill-node";
-
-/** Уроков в одном модуле: после них открывается следующий уровень. */
-export const LESSONS_PER_MODULE = 5;
+import { SkillNode } from "./skill-node";
 
 /** Сдвиг узлов от центра, чтобы путь шёл змейкой, как в макете. */
 const offsets = [
@@ -19,75 +15,44 @@ const offsets = [
   "translate-x-0",
 ] as const;
 
-function stateOf(
-  category: Category,
-  completedIds: number[],
-  currentId: number | null,
-): SkillState {
-  if (completedIds.includes(category.id)) return "completed";
-  if (category.id === currentId) return "current";
-  return "locked";
-}
-
-function chunk<T>(items: T[], size: number): T[][] {
-  return Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
-    items.slice(index * size, (index + 1) * size),
-  );
-}
-
-/** Путь обучения: категории из API как цепочка уроков, разбитая на модули. */
+/**
+ * Путь обучения: юниты и уроки приходят из GET /path уже по порядку,
+ * а состояние каждого урока считает сервер.
+ */
 export function SkillTree({
-  categories,
-  completedIds,
-  startLevel,
+  units,
   onSelect,
 }: {
-  categories: Category[];
-  completedIds: number[];
-  startLevel: CourseLevel;
-  onSelect: (category: Category, index: number) => void;
+  units: PathUnit[];
+  onSelect: (lesson: PathLesson, unit: PathUnit) => void;
 }) {
-  const current =
-    categories.find((category) => !completedIds.includes(category.id)) ?? null;
-  const modules = chunk(categories, LESSONS_PER_MODULE);
+  let nodeIndex = 0;
 
   return (
     <ol className="flex flex-col items-center gap-3">
-      {modules.map((lessons, moduleIndex) => {
-        const firstIndex = moduleIndex * LESSONS_PER_MODULE;
-        const previous = modules[moduleIndex - 1];
-        return (
-          <Fragment key={lessons[0].id}>
-            {previous && (
-              <li className="my-4 w-full">
-                <ModuleTransition
-                  from={levelAt(startLevel, moduleIndex - 1)}
-                  to={levelAt(startLevel, moduleIndex)}
-                  unlocked={previous.every((lesson) =>
-                    completedIds.includes(lesson.id),
-                  )}
-                  onStart={() => onSelect(lessons[0], firstIndex)}
+      {units.map((unit, unitIndex) => (
+        <Fragment key={unit.id}>
+          <li className={cn("w-full", unitIndex > 0 && "mt-4")}>
+            <div className="flex flex-col gap-1 rounded-card border-2 border-surface bg-surface-muted px-5 py-4">
+              <Eyebrow className="text-micro">Юнит {unitIndex + 1}</Eyebrow>
+              <p className="text-title text-primary">{unit.title_ru}</p>
+              <p className="text-caption text-muted">{unit.description}</p>
+            </div>
+          </li>
+          {unit.lessons.map((lesson) => {
+            const offset = offsets[nodeIndex++ % offsets.length];
+            return (
+              <li key={lesson.id} className={cn(offset)}>
+                <SkillNode
+                  label={lesson.title_ru}
+                  state={lesson.state}
+                  onSelect={() => onSelect(lesson, unit)}
                 />
               </li>
-            )}
-            {lessons.map((category, offset) => {
-              const index = firstIndex + offset;
-              return (
-                <li
-                  key={category.id}
-                  className={cn(offsets[index % offsets.length])}
-                >
-                  <SkillNode
-                    label={category.name_ru}
-                    state={stateOf(category, completedIds, current?.id ?? null)}
-                    onSelect={() => onSelect(category, index)}
-                  />
-                </li>
-              );
-            })}
-          </Fragment>
-        );
-      })}
+            );
+          })}
+        </Fragment>
+      ))}
     </ol>
   );
 }

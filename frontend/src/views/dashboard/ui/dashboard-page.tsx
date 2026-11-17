@@ -3,49 +3,33 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { categoryQueries, type Category } from "@/entities/category";
 import {
-  levelAt,
   levelTitle,
   profileQueries,
-  useLearnerStore,
   useLives,
 } from "@/entities/learner";
+import { pathQueries, type PathLesson, type PathUnit } from "@/entities/path";
 import { Button, Eyebrow, StateNote } from "@/shared/ui";
 import { LessonPreview } from "@/widgets/lesson-preview";
 import { NoLivesDialog } from "@/widgets/no-lives";
-import { LESSONS_PER_MODULE, SkillTree } from "@/widgets/skill-tree";
+import { SkillTree } from "@/widgets/skill-tree";
 
 import { PathGlows } from "./path-glows";
 
-/** Путь обучения: категории из API выстроены цепочкой уроков. */
+/** Путь обучения: юниты и уроки из GET /path, состояние считает сервер. */
 export function DashboardPage() {
-  const learner = useLearnerStore((state) => state.learner);
   const profile = useQuery(profileQueries.current());
   const { lives, pending: livesPending } = useLives();
-  const categories = useQuery(categoryQueries.all());
+  const path = useQuery(pathQueries.all());
   const [preview, setPreview] = useState<{
-    category: Category;
-    index: number;
+    lesson: PathLesson;
+    unit: PathUnit;
   } | null>(null);
   const [noLivesOpen, setNoLivesOpen] = useState(false);
 
-  const completedIds = learner?.completedCategoryIds ?? [];
-  const startLevel = profile.data?.level ?? "A1";
-  const currentIndex = Math.max(
-    0,
-    categories.data?.findIndex(
-      (category) => !completedIds.includes(category.id),
-    ) ?? 0,
-  );
-  const currentLevel = levelAt(
-    startLevel,
-    Math.floor(currentIndex / LESSONS_PER_MODULE),
-  );
-
-  function select(category: Category, index: number) {
+  function select(lesson: PathLesson, unit: PathUnit) {
     if (!livesPending && lives === 0) setNoLivesOpen(true);
-    else setPreview({ category, index });
+    else setPreview({ lesson, unit });
   }
 
   return (
@@ -54,39 +38,37 @@ export function DashboardPage() {
 
       <div className="relative flex flex-1 flex-col px-gutter pt-6 pb-8">
         <div className="flex flex-col gap-1.25">
-          <Eyebrow>{levelTitle(currentLevel)}</Eyebrow>
+          {profile.data && <Eyebrow>{levelTitle(profile.data.level)}</Eyebrow>}
           <h1 className="text-h3 text-foreground">Твой путь обучения</h1>
         </div>
 
         <div className="mt-10 flex flex-1 flex-col">
-          {categories.isPending && <StateNote text="Загружаем уроки…" />}
-          {categories.isError && (
+          {path.isPending && <StateNote text="Загружаем уроки…" />}
+          {path.isError && (
             <StateNote
-              text={categories.error.message}
+              text={path.error.message}
               action={
                 <Button
                   size="md"
                   variant="secondary"
                   className="w-auto"
-                  onClick={() => categories.refetch()}
+                  onClick={() => path.refetch()}
                 >
                   Повторить
                 </Button>
               }
             />
           )}
-          {categories.data && (
-            <SkillTree
-              categories={categories.data}
-              completedIds={completedIds}
-              startLevel={startLevel}
-              onSelect={select}
-            />
+          {path.data && path.data.units.length === 0 && (
+            <StateNote text="Уроков пока нет" />
+          )}
+          {path.data && path.data.units.length > 0 && (
+            <SkillTree units={path.data.units} onSelect={select} />
           )}
         </div>
       </div>
 
-      <LessonPreview lesson={preview} onClose={() => setPreview(null)} />
+      <LessonPreview selected={preview} onClose={() => setPreview(null)} />
       <NoLivesDialog open={noLivesOpen} onClose={() => setNoLivesOpen(false)} />
     </div>
   );
