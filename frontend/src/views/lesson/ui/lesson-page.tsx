@@ -1,50 +1,63 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
-import { profileQueries, useLives } from "@/entities/learner";
-import { QuizSession, type LessonScore } from "@/features/quiz-session";
-import { Screen } from "@/shared/ui";
+import { lessonQueries } from "@/entities/lesson";
+import { LessonSession, type LessonSummary } from "@/features/lesson-session";
+import { ApiError } from "@/shared/api";
+import { Button, Screen, StateNote } from "@/shared/ui";
 
 import { LessonResult } from "./lesson-result";
 
-/** Размер урока привязан к дневной цели: минута ≈ один вопрос. */
-function questionsFor(goalMinutes: number | undefined) {
-  return Math.max(4, Math.min(10, goalMinutes ?? 5));
+function BackToPath({ text }: { text: string }) {
+  return (
+    <Screen>
+      <StateNote
+        text={text}
+        action={
+          <Button asChild size="md" variant="secondary" className="w-auto">
+            <Link href="/learn">Вернуться к пути</Link>
+          </Button>
+        }
+      />
+    </Screen>
+  );
 }
 
-export function LessonPage({ categoryId }: { categoryId: number }) {
-  const router = useRouter();
-  const profile = useQuery(profileQueries.current());
-  const { lives, pending } = useLives();
-  const [finished, setFinished] = useState<LessonScore | null>(null);
+export function LessonPage({ lessonId }: { lessonId: number }) {
+  const lesson = useQuery(lessonQueries.detail(lessonId));
+  const [finished, setFinished] = useState<LessonSummary | null>(null);
   const onFinished = useCallback(
-    (score: LessonScore) => setFinished(score),
+    (summary: LessonSummary) => setFinished(summary),
     [],
   );
 
-  // Без жизней урок не начинаем — на пути покажется «Жизни закончились».
-  useEffect(() => {
-    if (!pending && lives === 0) router.replace("/learn");
-  }, [lives, pending, router]);
+  if (lesson.isPending) return <Screen />;
 
-  if (pending || profile.isPending || lives === 0) {
-    return <Screen />;
+  if (lesson.isError) {
+    const status = lesson.error instanceof ApiError ? lesson.error.status : 0;
+    if (status === 403) {
+      return <BackToPath text="Этот урок ещё закрыт: пройди предыдущие." />;
+    }
+    if (status === 404) return <BackToPath text="Такого урока нет." />;
+    return <BackToPath text={lesson.error.message} />;
+  }
+
+  // Без жизней урок не начинаем. Если жизни есть, но их 0 по данным урока —
+  // сервер всё равно ответит 409 на первый ответ, но не пускаем зря.
+  if (lesson.data.lives === 0) {
+    return <BackToPath text="Жизни закончились. Вернись, когда жизнь восстановится." />;
   }
 
   if (finished) {
-    return <LessonResult score={finished} />;
+    return <LessonResult summary={finished} />;
   }
 
   return (
     <Screen className="h-dvh bg-surface-muted">
-      <QuizSession
-        categoryId={categoryId}
-        size={questionsFor(profile.data?.daily_goal)}
-        onFinished={onFinished}
-      />
+      <LessonSession lesson={lesson.data} onFinished={onFinished} />
     </Screen>
   );
 }

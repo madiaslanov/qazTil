@@ -25,6 +25,7 @@ export function AnswerFeedback({
   answer,
   isLast,
   speakable = true,
+  canRetry = true,
   onNext,
   onRetry,
 }: {
@@ -34,6 +35,8 @@ export function AnswerFeedback({
   isLast: boolean;
   /** Озвучивать ли ответ: для списка пар это не нужно. */
   speakable?: boolean;
+  /** Повтор недоступен, когда на этом ответе кончились жизни. */
+  canRetry?: boolean;
   onNext: () => void;
   onRetry: () => void;
 }) {
@@ -105,6 +108,8 @@ export function AnswerFeedback({
         <Button onClick={onNext}>
           {isLast ? "Завершить урок" : "Продолжить"}
         </Button>
+      ) : !canRetry ? (
+        <Button onClick={onNext}>Продолжить</Button>
       ) : (
         <>
           <Button onClick={onRetry}>Повторить</Button>

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { Check, Flame, Target } from "lucide-react";
 
-import { useLives, XP_PER_CORRECT_ANSWER } from "@/entities/learner";
-import type { LessonScore } from "@/features/quiz-session";
+import { useQuery } from "@tanstack/react-query";
+
+import { profileQueries } from "@/entities/learner";
+import type { LessonSummary } from "@/features/lesson-session";
 import { Button, Card, IconBadge, Screen } from "@/shared/ui";
 
 function plural(days: number) {
@@ -15,11 +17,15 @@ function plural(days: number) {
   return "дней";
 }
 
-/** Экран после урока: XP, страйк и точность прохождения. */
-export function LessonResult({ score }: { score: LessonScore }) {
-  const { streak } = useLives();
+/** Экран после урока. XP, стрик и следующий урок — из ответов сервера. */
+export function LessonResult({ summary }: { summary: LessonSummary }) {
+  const profile = useQuery(profileQueries.current());
+  const goalMet = profile.data?.today.goal_met ?? false;
+  const { streak } = summary;
   const accuracy =
-    score.total === 0 ? 0 : Math.round((score.correct / score.total) * 100);
+    summary.total === 0
+      ? 0
+      : Math.round((summary.correct / summary.total) * 100);
 
   return (
     <Screen className="px-gutter pt-22 pb-7.5">
@@ -30,12 +36,12 @@ export function LessonResult({ score }: { score: LessonScore }) {
 
         <div className="flex flex-col items-center gap-2 text-center">
           <p className="text-title text-muted">
-            +{score.correct * XP_PER_CORRECT_ANSWER} XP
+            +{summary.xpEarned} XP
           </p>
           <h1 className="text-hero font-black text-foreground">Урок завершен</h1>
           <p className="max-w-73 text-body text-muted">
-            Сильная работа: верно {score.correct} из {score.total}. Новые
-            слова уже в твоём словаре.
+            Верно {summary.correct} из {summary.total}.
+            {goalMet && " Дневная цель выполнена."}
           </p>
         </div>
 
@@ -43,7 +49,7 @@ export function LessonResult({ score }: { score: LessonScore }) {
           <Stat
             icon={<Flame />}
             tone="bg-lives"
-            label="Страйк"
+            label={summary.streakIncreased ? "Страйк вырос" : "Страйк"}
             value={`${streak} ${plural(streak)}`}
           />
           <Stat
@@ -56,7 +62,9 @@ export function LessonResult({ score }: { score: LessonScore }) {
       </div>
 
       <Button asChild className="mt-auto">
-        <Link href="/learn">Продолжить</Link>
+        <Link href="/learn">
+          {summary.nextLessonId === null ? "К пути" : "Продолжить"}
+        </Link>
       </Button>
     </Screen>
   );
