@@ -167,3 +167,10 @@ CREATE INDEX IF NOT EXISTS idx_units_level ON units(level, position);
 ALTER TABLE learner_profiles ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
 
 ALTER TABLE learner_profiles ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'Asia/Almaty';
+
+-- Версия содержимого курса. Хэш сида, по которому бэк понимает, что курс в
+-- коде изменился и его пора засеять заново.
+CREATE TABLE IF NOT EXISTS course_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
