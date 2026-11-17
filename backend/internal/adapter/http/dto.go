@@ -145,6 +145,9 @@ type ExerciseResponse struct {
 	// line, the hint is its Russian meaning.
 	Speaker string `json:"speaker,omitempty" example:"Даяшы"`
 	Hint    string `json:"hint,omitempty" example:"Здравствуйте, что желаете?"`
+	// Goal says what to say, Help is an optional nudge for a harder turn.
+	Goal string `json:"goal,omitempty" example:"Закажи чай и самсу"`
+	Help string `json:"help,omitempty" example:"шай — чай, өтінемін — пожалуйста"`
 	// Options belong to a choice exercise.
 	Options []ExerciseItemResponse `json:"options,omitempty"`
 	// PairsLeft and PairsRight belong to a match exercise.

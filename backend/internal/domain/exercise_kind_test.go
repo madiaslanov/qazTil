@@ -164,23 +164,70 @@ func TestKnownExerciseKind(t *testing.T) {
 	}
 }
 
-func TestDialogueIsCheckedLikeAssemble(t *testing.T) {
-	exercise := assembleExercise()
-	exercise.Kind = domain.ExerciseDialogue
-	exercise.Payload = []byte(`{"speaker":"Даяшы","hint":"Что желаете?","tiles":[
-		{"id":"t1","text":"шай"},{"id":"t2","text":"Бір"},{"id":"t3","text":"өтінемін"},{"id":"t4","text":"самса"}
-	]}`)
-	exercise.Answer = `["t2","t1","t3"]`
+func dialogueExercise() domain.Exercise {
+	return domain.Exercise{
+		ID: 4, LessonID: 1, Kind: domain.ExerciseDialogue,
+		Payload: []byte(`{"speaker":"Даяшы","hint":"Что желаете?","goal":"Закажи чай","tiles":[
+			{"id":"t1","text":"шай"},{"id":"t2","text":"Бір"},{"id":"t3","text":"өтінемін"},
+			{"id":"t4","text":"беріңізші"},{"id":"t5","text":"самса"}
+		]}`),
+		// Два принятых ответа: «Бір шай өтінемін» и «шай беріңізші».
+		Answer: `[["t2","t1","t3"],["t1","t4"]]`,
+	}
+}
 
-	correct, expected, err := domain.CheckAnswer(exercise, domain.ExerciseAnswer{TileIDs: []string{"t2", "t1", "t3"}})
-	if err != nil || !correct || expected != "Бір шай өтінемін" {
-		t.Fatalf("верный ответ: correct=%v expected=%q err=%v", correct, expected, err)
+func TestDialogueAcceptsEveryListedReply(t *testing.T) {
+	cases := map[string]struct {
+		tiles    []string
+		expected string
+	}{
+		"первый ответ": {[]string{"t2", "t1", "t3"}, "Бір шай өтінемін"},
+		"второй ответ": {[]string{"t1", "t4"}, "шай беріңізші"},
 	}
-	correct, _, err = domain.CheckAnswer(exercise, domain.ExerciseAnswer{TileIDs: []string{"t1", "t2", "t3"}})
-	if err != nil || correct {
-		t.Fatalf("порядок плиток и есть ответ: correct=%v err=%v", correct, err)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			correct, expected, err := domain.CheckAnswer(dialogueExercise(), domain.ExerciseAnswer{TileIDs: tc.tiles})
+			if err != nil || !correct {
+				t.Fatalf("ждали верный ответ: correct=%v err=%v", correct, err)
+			}
+			// Верный ответ возвращает то, что собрал ученик.
+			if expected != tc.expected {
+				t.Fatalf("expected = %q, ждали %q", expected, tc.expected)
+			}
+		})
 	}
-	if !domain.KnownExerciseKind(domain.ExerciseDialogue) {
-		t.Fatal("dialogue должен быть известным типом")
+}
+
+func TestDialogueRejectsAndListsWhatFits(t *testing.T) {
+	for name, tiles := range map[string][]string{
+		"порядок слов": {"t1", "t2", "t3"},
+		"лишнее слово": {"t1", "t4", "t5"},
+		"неполный":     {"t1"},
+		"чужая плитка": {"t9"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			correct, expected, err := domain.CheckAnswer(dialogueExercise(), domain.ExerciseAnswer{TileIDs: tiles})
+			if err != nil || correct {
+				t.Fatalf("ждали неверный ответ: correct=%v err=%v", correct, err)
+			}
+			// Ошибка показывает все подходящие ответы.
+			if expected != "Бір шай өтінемін / шай беріңізші" {
+				t.Fatalf("expected = %q", expected)
+			}
+		})
+	}
+	if _, _, err := domain.CheckAnswer(dialogueExercise(), domain.ExerciseAnswer{}); err == nil {
+		t.Fatal("пустой ответ должен быть ошибкой запроса")
+	}
+}
+
+func TestDialogueTilesAreComparedByText(t *testing.T) {
+	// Две плитки «шай» взаимозаменяемы: важен текст, а не идентификатор.
+	exercise := dialogueExercise()
+	exercise.Payload = []byte(`{"goal":"x","tiles":[{"id":"t1","text":"шай"},{"id":"t2","text":"шай"},{"id":"t3","text":"Бір"}]}`)
+	exercise.Answer = `[["t3","t1"]]`
+	correct, _, err := domain.CheckAnswer(exercise, domain.ExerciseAnswer{TileIDs: []string{"t3", "t2"}})
+	if err != nil || !correct {
+		t.Fatalf("одинаковые плитки взаимозаменяемы: correct=%v err=%v", correct, err)
 	}
 }

@@ -24,6 +24,10 @@ type ExercisePayload struct {
 	// meaning of their line so the learner can follow the scene.
 	Speaker string `json:"speaker,omitempty"`
 	Hint    string `json:"hint,omitempty"`
+	// Goal tells the learner what to say, in Russian. Help is an optional nudge
+	// for harder turns: word meanings, never the finished reply.
+	Goal string `json:"goal,omitempty"`
+	Help string `json:"help,omitempty"`
 }
 
 // ExerciseAnswer is a learner's answer in the shape its kind calls for.
@@ -63,8 +67,10 @@ func CheckAnswer(exercise Exercise, answer ExerciseAnswer) (bool, string, error)
 		return got == want, exercise.Answer, nil
 	case ExerciseMatch:
 		return checkMatch(exercise, answer)
-	case ExerciseAssemble, ExerciseDialogue:
+	case ExerciseAssemble:
 		return checkAssemble(exercise, answer)
+	case ExerciseDialogue:
+		return checkDialogue(exercise, answer)
 	}
 	return false, "", ErrInvalid
 }
@@ -134,6 +140,53 @@ func checkAssemble(exercise Exercise, answer ExerciseAnswer) (bool, string, erro
 		}
 	}
 	return true, expected, nil
+}
+
+// checkDialogue accepts any of the replies the exercise lists. The key is a
+// list of tile-id sequences, one per accepted reply, and tiles are compared by
+// their text, so a word that appears twice in the bank is interchangeable.
+// A right answer echoes the learner's own reply; a wrong one lists what would
+// have fit, so there is more than one way to read the scene.
+func checkDialogue(exercise Exercise, answer ExerciseAnswer) (bool, string, error) {
+	var variants [][]string
+	if err := json.Unmarshal([]byte(exercise.Answer), &variants); err != nil || len(variants) == 0 {
+		return false, "", ErrInvalid
+	}
+	if len(answer.TileIDs) == 0 {
+		return false, "", ErrInvalid
+	}
+	payload, err := exercise.DecodePayload()
+	if err != nil {
+		return false, "", err
+	}
+	text := itemText(payload.Tiles)
+	line := func(ids []string) []string {
+		out := make([]string, 0, len(ids))
+		for _, id := range ids {
+			out = append(out, strings.ToLower(text[id]))
+		}
+		return out
+	}
+	got := line(answer.TileIDs)
+	shown := make([]string, 0, len(variants))
+	for _, variant := range variants {
+		shown = append(shown, describeTiles(exercise, variant))
+		want := line(variant)
+		if len(want) != len(got) {
+			continue
+		}
+		same := true
+		for i := range want {
+			if want[i] != got[i] {
+				same = false
+				break
+			}
+		}
+		if same {
+			return true, describeTiles(exercise, answer.TileIDs), nil
+		}
+	}
+	return false, strings.Join(shown, " / "), nil
 }
 
 // DecodePayload reads the client-visible part of the exercise.

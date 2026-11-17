@@ -33,8 +33,15 @@ type courseExercise struct {
 	tiles []seedItem
 	order []string
 	// speaker and hint belong to a dialogue: who talks, and what the line means.
-	speaker string
-	hint    string
+	// goal is what the learner must say, help an optional nudge, and replies
+	// are the accepted answers as plain lines; tiles and variants are built
+	// from them once all scenes are known.
+	speaker  string
+	hint     string
+	goal     string
+	help     string
+	replies  []string
+	variants [][]string
 }
 
 // payload builds the client-visible part and the stored key for one exercise.
@@ -67,12 +74,18 @@ func (e courseExercise) payload() (string, string, error) {
 		}
 		key = string(raw)
 	case "assemble", "dialogue":
+		out["tiles"] = jsonItems(e.tiles)
+		order := any(e.order)
 		if e.kind == "dialogue" {
 			out["speaker"] = e.speaker
 			out["hint"] = e.hint
+			out["goal"] = e.goal
+			if e.help != "" {
+				out["help"] = e.help
+			}
+			order = e.variants
 		}
-		out["tiles"] = jsonItems(e.tiles)
-		raw, err := json.Marshal(e.order)
+		raw, err := json.Marshal(order)
 		if err != nil {
 			return "", "", err
 		}
