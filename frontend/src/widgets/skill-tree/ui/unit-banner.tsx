@@ -10,7 +10,7 @@ const eyebrows: Record<UnitBannerState, string> = {
   locked: "закрыт",
 };
 
-/** Карточка в начале юнита: «Юнит 2 открыт · В магазине» со стрелкой на старт. */
+/** Карточка в начале модуля: «Модуль 2 открыт · В магазине» со стрелкой на старт. */
 export function UnitBanner({
   number,
   title,
@@ -40,14 +40,14 @@ export function UnitBanner({
             state === "open" ? "text-accent" : "text-muted",
           )}
         >
-          Юнит {number} {eyebrows[state]}
+          Модуль {number} {eyebrows[state]}
         </p>
         <p className="text-title text-primary">{title}</p>
         <p className="max-w-52.5 text-eyebrow text-muted">{description}</p>
       </div>
       {state === "locked" ? (
         <span
-          title="Пройди предыдущий юнит"
+          title="Пройди предыдущий модуль"
           className="flex size-11 shrink-0 items-center justify-center rounded-full bg-line text-muted"
         >
           <Lock className="size-5" />
@@ -56,7 +56,7 @@ export function UnitBanner({
         <button
           type="button"
           onClick={onStart}
-          aria-label={`Открыть юнит «${title}»`}
+          aria-label={`Открыть модуль «${title}»`}
           className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
         >
           <ArrowRight className="size-5" />

@@ -20,7 +20,7 @@ function bannerState(unit: PathUnit): UnitBannerState {
   return "open";
 }
 
-/** Куда ведёт стрелка юнита: текущий урок, а у пройденного — первый. */
+/** Куда ведёт стрелка модуля: текущий урок, а у пройденного — первый. */
 function entryLesson(unit: PathUnit): PathLesson | undefined {
   return (
     unit.lessons.find((lesson) => lesson.state === "current") ?? unit.lessons[0]
