@@ -27,7 +27,7 @@ func TestPathMarksCurrentLesson(t *testing.T) {
 			{LessonID: 20, Completed: false, Correct: 0, Total: 1},
 		},
 	}}
-	path, err := NewPathService(course, progress).Get(context.Background(), 7)
+	path, err := NewPathService(course, progress, &memStats{stats: domain.DefaultStats(1)}).Get(context.Background(), 7)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestPathMarksCurrentLesson(t *testing.T) {
 }
 
 func TestPathRejectsMissingUser(t *testing.T) {
-	_, err := NewPathService(&memCourse{}, &memCourseProgress{}).Get(context.Background(), 0)
+	_, err := NewPathService(&memCourse{}, &memCourseProgress{}, &memStats{stats: domain.DefaultStats(1)}).Get(context.Background(), 0)
 	if !errors.Is(err, domain.ErrInvalid) {
 		t.Fatalf("err = %v", err)
 	}

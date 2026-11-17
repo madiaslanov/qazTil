@@ -155,6 +155,15 @@ type ExerciseResponse struct {
 type LessonDetailResponse struct {
 	LessonResponse
 	Exercises []ExerciseResponse `json:"exercises"`
+	// State is completed or current. A locked lesson is answered with 403.
+	State string `json:"state" example:"current" enums:"completed,current"`
+	// ResumePosition is the 0-based index of the first unanswered exercise.
+	// A completed lesson resumes at zero: it starts over.
+	ResumePosition int `json:"resume_position" example:"2"`
+	Correct        int `json:"correct" example:"3"`
+	Total          int `json:"total" example:"5"`
+	Lives          int `json:"lives" example:"4"`
+	MaxLives       int `json:"max_lives" example:"5"`
 } // @name LessonDetailResponse
 
 // ExerciseAnswerRequest carries the answer in the shape the exercise kind
