@@ -189,7 +189,8 @@ func checkDialogueKey(t *testing.T, id string, e courseExercise) {
 	for i, word := range first {
 		firstLower[i] = strings.ToLower(word)
 	}
-	if inOrder(lower, firstLower) {
+	// У ответа из одного слова нет порядка, который можно перепутать.
+	if len(first) > 1 && inOrder(lower, firstLower) {
 		t.Errorf("%s: первый ответ уже лежит в банке по порядку", id)
 	}
 }

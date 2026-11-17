@@ -186,6 +186,10 @@ func checkDialogue(exercise Exercise, answer ExerciseAnswer) (bool, string, erro
 			return true, describeTiles(exercise, answer.TileIDs), nil
 		}
 	}
+	// Не больше трёх: длинный список только запутает.
+	if len(shown) > 3 {
+		shown = shown[:3]
+	}
 	return false, strings.Join(shown, " / "), nil
 }
 
