@@ -251,6 +251,12 @@ func toExercise(item domain.Exercise) ExerciseResponse {
 		if len(out.Options) == 0 && len(item.Options) > 0 {
 			out.LegacyOptions = item.Options
 		}
+	case domain.ExerciseDialogue:
+		out.Tiles = toItems(payload.Tiles)
+		out.Speaker = payload.Speaker
+		out.Hint = payload.Hint
+		out.Goal = payload.Goal
+		out.Help = payload.Help
 	case domain.ExerciseMatch:
 		out.PairsLeft = toItems(payload.PairsLeft)
 		out.PairsRight = toItems(payload.PairsRight)

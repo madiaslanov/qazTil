@@ -4,6 +4,7 @@ import { Check, Volume2, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import { canSpeak, speak } from "@/shared/lib/speech";
+import { capitalize } from "@/shared/lib/text";
 import { Button } from "@/shared/ui";
 
 const copy = {
@@ -25,6 +26,7 @@ export function AnswerFeedback({
   answer,
   isLast,
   speakable = true,
+  canRetry = true,
   onNext,
   onRetry,
 }: {
@@ -34,6 +36,8 @@ export function AnswerFeedback({
   isLast: boolean;
   /** Озвучивать ли ответ: для списка пар это не нужно. */
   speakable?: boolean;
+  /** Повтор недоступен, когда на этом ответе кончились жизни. */
+  canRetry?: boolean;
   onNext: () => void;
   onRetry: () => void;
 }) {
@@ -86,7 +90,7 @@ export function AnswerFeedback({
             {text.note}
           </p>
           <p lang="kk" className="text-lead text-primary">
-            {answer}
+            {capitalize(answer)}
           </p>
         </div>
         {speakable && canSpeak() && (
@@ -105,6 +109,8 @@ export function AnswerFeedback({
         <Button onClick={onNext}>
           {isLast ? "Завершить урок" : "Продолжить"}
         </Button>
+      ) : !canRetry ? (
+        <Button onClick={onNext}>Продолжить</Button>
       ) : (
         <>
           <Button onClick={onRetry}>Повторить</Button>

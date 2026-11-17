@@ -138,15 +138,22 @@ type ExerciseItemResponse struct {
 type ExerciseResponse struct {
 	ID       int64  `json:"id" example:"1"`
 	LessonID int64  `json:"lesson_id" example:"1"`
-	Kind     string `json:"kind" example:"choice" enums:"choice,translate,match,assemble"`
+	Kind     string `json:"kind" example:"choice" enums:"choice,translate,match,assemble,dialogue"`
 	Position int    `json:"position" example:"1"`
 	Prompt   string `json:"prompt,omitempty" example:"Спасибо"`
+	// Speaker and Hint belong to a dialogue: the prompt is the other speaker's
+	// line, the hint is its Russian meaning.
+	Speaker string `json:"speaker,omitempty" example:"Даяшы"`
+	Hint    string `json:"hint,omitempty" example:"Здравствуйте, что желаете?"`
+	// Goal says what to say, Help is an optional nudge for a harder turn.
+	Goal string `json:"goal,omitempty" example:"Закажи чай и самсу"`
+	Help string `json:"help,omitempty" example:"шай — чай, өтінемін — пожалуйста"`
 	// Options belong to a choice exercise.
 	Options []ExerciseItemResponse `json:"options,omitempty"`
 	// PairsLeft and PairsRight belong to a match exercise.
 	PairsLeft  []ExerciseItemResponse `json:"pairs_left,omitempty"`
 	PairsRight []ExerciseItemResponse `json:"pairs_right,omitempty"`
-	// Tiles belong to an assemble exercise.
+	// Tiles belong to an assemble or dialogue exercise.
 	Tiles []ExerciseItemResponse `json:"tiles,omitempty"`
 	// LegacyOptions serves the choice exercises seeded before payload existed.
 	LegacyOptions []string `json:"legacy_options,omitempty"`
@@ -170,7 +177,7 @@ type LessonDetailResponse struct {
 // calls for. Only the fields of that kind are read.
 type ExerciseAnswerRequest struct {
 	// Kind is optional: it only documents what the client meant to send.
-	Kind string `json:"kind,omitempty" example:"choice" enums:"choice,translate,match,assemble"`
+	Kind string `json:"kind,omitempty" example:"choice" enums:"choice,translate,match,assemble,dialogue"`
 	// Answer is the typed line of a translate exercise.
 	Answer string `json:"answer,omitempty" example:"Рақмет"`
 	// OptionID is the picked option of a choice exercise.

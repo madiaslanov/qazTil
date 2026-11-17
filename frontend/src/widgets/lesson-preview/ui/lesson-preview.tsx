@@ -2,83 +2,55 @@
 
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 
-import type { Category } from "@/entities/category";
-import { wordQueries } from "@/entities/word";
+import type { PathLesson, PathUnit } from "@/entities/path";
 import { BottomSheet, Button, Eyebrow } from "@/shared/ui";
 
-/** Сколько новых слов показываем в превью. */
-const PREVIEW_WORDS = 3;
-
-/** Шторка урока: новые слова, прогресс темы и кнопка старта. */
+/** Шторка урока: название, о чём он, и кнопка старта. */
 export function LessonPreview({
-  lesson,
+  selected,
   onClose,
 }: {
-  lesson: { category: Category; index: number } | null;
+  selected: { lesson: PathLesson; unit: PathUnit } | null;
   onClose: () => void;
 }) {
   return (
     <BottomSheet
-      open={lesson !== null}
+      open={selected !== null}
       onOpenChange={(open) => !open && onClose()}
-      title={lesson?.category.name_ru ?? "Урок"}
+      title={selected?.lesson.title_ru ?? "Урок"}
     >
-      {lesson && <Content category={lesson.category} index={lesson.index} />}
+      {selected && <Content lesson={selected.lesson} unit={selected.unit} />}
     </BottomSheet>
   );
 }
 
-function Content({ category, index }: { category: Category; index: number }) {
-  const words = useQuery(wordQueries.list(category.id));
-  const preview = words.data?.slice(0, PREVIEW_WORDS) ?? [];
+function Content({ lesson, unit }: { lesson: PathLesson; unit: PathUnit }) {
+  const completed = lesson.state === "completed";
 
   return (
     <>
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1.25">
           <Eyebrow className="text-micro">
-            Урок {index + 1}
-            {words.data && ` · ${words.data.length} слов`}
+            {unit.title_ru} · урок {lesson.position}
           </Eyebrow>
-          <p className="text-h1 text-heading">{category.name_ru}</p>
+          <p className="text-h1 text-heading">{lesson.title_ru}</p>
+          <p lang="kk" className="text-caption text-primary">
+            {lesson.title_kk}
+          </p>
         </div>
         <span className="flex size-13 shrink-0 items-center justify-center rounded-card bg-highlight-soft">
           <BookOpen className="size-6.25 text-foreground" />
         </span>
       </div>
 
-      <div className="flex flex-col gap-2.25">
-        <p className="text-eyebrow font-extrabold text-muted uppercase">
-          Новые слова · {words.data?.length ?? "…"}
-        </p>
-        <ul className="flex gap-2">
-          {words.isPending &&
-            Array.from({ length: PREVIEW_WORDS }, (_, key) => (
-              <li
-                key={key}
-                className="h-13.5 flex-1 animate-pulse rounded-chip bg-background"
-              />
-            ))}
-          {preview.map((word) => (
-            <li
-              key={word.id}
-              className="flex min-w-0 flex-1 flex-col gap-0.75 rounded-chip bg-background p-2.5"
-            >
-              <span className="truncate text-caption text-primary">
-                {word.kazakh}
-              </span>
-              <span className="truncate text-nano text-muted">
-                {word.russian}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <p className="text-body text-muted">{lesson.description}</p>
 
       <Button asChild>
-        <Link href={`/lesson/${category.id}`}>Начать</Link>
+        <Link href={`/lesson/${lesson.id}`}>
+          {completed ? "Пройти ещё раз" : "Начать"}
+        </Link>
       </Button>
     </>
   );

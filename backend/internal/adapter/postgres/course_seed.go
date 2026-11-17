@@ -32,6 +32,16 @@ type courseExercise struct {
 	// tiles and order belong to an assemble exercise.
 	tiles []seedItem
 	order []string
+	// speaker and hint belong to a dialogue: who talks, and what the line means.
+	// goal is what the learner must say, help an optional nudge, and replies
+	// are the accepted answers as plain lines; tiles and variants are built
+	// from them once all scenes are known.
+	speaker  string
+	hint     string
+	goal     string
+	help     string
+	replies  []string
+	variants [][]string
 }
 
 // payload builds the client-visible part and the stored key for one exercise.
@@ -63,9 +73,19 @@ func (e courseExercise) payload() (string, string, error) {
 			return "", "", err
 		}
 		key = string(raw)
-	case "assemble":
+	case "assemble", "dialogue":
 		out["tiles"] = jsonItems(e.tiles)
-		raw, err := json.Marshal(e.order)
+		order := any(e.order)
+		if e.kind == "dialogue" {
+			out["speaker"] = e.speaker
+			out["hint"] = e.hint
+			out["goal"] = e.goal
+			if e.help != "" {
+				out["help"] = e.help
+			}
+			order = e.variants
+		}
+		raw, err := json.Marshal(order)
 		if err != nil {
 			return "", "", err
 		}
@@ -234,108 +254,6 @@ func insertLessons(ctx context.Context, tx *sql.Tx, unitID int64, lessons []cour
 // Путь идёт от A0 к A1: сначала бытовые ситуации, затем работа и учёба.
 var courseStarter = append(append([]courseSituation{}, courseLife...), courseWork, courseStudy)
 
-var courseLife = []courseSituation{
-	{
-		slug:        "cafe",
-		titleKK:     "Дәмхана",
-		titleRU:     "В кафе",
-		description: "Заказ, счёт и короткие реакции за столом",
-		words: []courseWord{
-			{"Мәзір беріңізші", "Принесите меню, пожалуйста", "mäzir beriñizshi"},
-			{"Бір шай, өтінемін", "Один чай, пожалуйста", "bir shai, ötinemin"},
-			{"Есепшотты әкеліңізші", "Принесите счёт, пожалуйста", "esepshotty äkeliñizshi"},
-			{"Дәмді екен", "Вкусно", "dämdi eken"},
-			{"Рақмет", "Спасибо", "raqmet"},
-		},
-		lessons: []courseLesson{
-			{
-				titleKK: "Тапсырыс", titleRU: "Заказ",
-				description: "Как попросить меню и напиток",
-				exercises: []courseExercise{
-					{kind: "choice", prompt: "Принесите меню, пожалуйста", answer: "Мәзір беріңізші", options: []string{"Мәзір беріңізші", "Бір шай, өтінемін", "Рақмет"}},
-					{kind: "choice", prompt: "Один чай, пожалуйста", answer: "Бір шай, өтінемін", options: []string{"Бір шай, өтінемін", "Есепшотты әкеліңізші", "Дәмді екен"}},
-					{kind: "translate", prompt: "Принесите меню, пожалуйста", answer: "Мәзір беріңізші"},
-				},
-			},
-			{
-				titleKK: "Есеп", titleRU: "Счёт",
-				description: "Как попросить счёт и ответить за столом",
-				exercises: []courseExercise{
-					{kind: "choice", prompt: "Принесите счёт, пожалуйста", answer: "Есепшотты әкеліңізші", options: []string{"Есепшотты әкеліңізші", "Мәзір беріңізші", "Рақмет"}},
-					{kind: "choice", prompt: "Вкусно", answer: "Дәмді екен", options: []string{"Дәмді екен", "Бір шай, өтінемін", "Рақмет"}},
-					{kind: "translate", prompt: "Спасибо", answer: "Рақмет"},
-				},
-			},
-		},
-	},
-	{
-		slug:        "shop",
-		titleKK:     "Дүкен",
-		titleRU:     "В магазине",
-		description: "Цена, выбор и оплата",
-		words: []courseWord{
-			{"Бұл қанша тұрады?", "Сколько это стоит?", "bul qansha turady?"},
-			{"Қымбат", "Дорого", "qymbat"},
-			{"Арзанырақ бар ма?", "Есть подешевле?", "arzanyraq bar ma?"},
-			{"Мынаны алайын", "Я возьму это", "mynany alaiyn"},
-			{"Картамен төлеймін", "Заплачу картой", "kartamen töleimin"},
-		},
-		lessons: []courseLesson{
-			{
-				titleKK: "Баға", titleRU: "Цена",
-				description: "Как спросить цену и сказать, что дорого",
-				exercises: []courseExercise{
-					{kind: "choice", prompt: "Сколько это стоит?", answer: "Бұл қанша тұрады?", options: []string{"Бұл қанша тұрады?", "Қымбат", "Мынаны алайын"}},
-					{kind: "choice", prompt: "Дорого", answer: "Қымбат", options: []string{"Қымбат", "Бұл қанша тұрады?", "Арзанырақ бар ма?"}},
-					{kind: "translate", prompt: "Есть подешевле?", answer: "Арзанырақ бар ма?"},
-				},
-			},
-			{
-				titleKK: "Төлем", titleRU: "Оплата",
-				description: "Как взять вещь и заплатить",
-				exercises: []courseExercise{
-					{kind: "choice", prompt: "Я возьму это", answer: "Мынаны алайын", options: []string{"Мынаны алайын", "Картамен төлеймін", "Қымбат"}},
-					{kind: "choice", prompt: "Заплачу картой", answer: "Картамен төлеймін", options: []string{"Картамен төлеймін", "Бұл қанша тұрады?", "Мынаны алайын"}},
-					{kind: "translate", prompt: "Сколько это стоит?", answer: "Бұл қанша тұрады?"},
-				},
-			},
-		},
-	},
-	{
-		slug:        "road",
-		titleKK:     "Көлік",
-		titleRU:     "В дороге",
-		description: "Такси и билет",
-		words: []courseWord{
-			{"Такси шақырыңызшы", "Вызовите такси, пожалуйста", "taksi shaqyryñyzshy"},
-			{"Вокзалға барайық", "Поехали на вокзал", "vokzalğa baraiyq"},
-			{"Осында тоқтаңыз", "Остановите здесь", "osynda toqtañyz"},
-			{"Қанша уақыт кетеді?", "Сколько времени займёт?", "qansha uaqyt ketedi?"},
-			{"Билет бар ма?", "Есть билет?", "bilet bar ma?"},
-		},
-		lessons: []courseLesson{
-			{
-				titleKK: "Такси", titleRU: "Такси",
-				description: "Как вызвать машину и назвать место",
-				exercises: []courseExercise{
-					{kind: "choice", prompt: "Вызовите такси, пожалуйста", answer: "Такси шақырыңызшы", options: []string{"Такси шақырыңызшы", "Вокзалға барайық", "Билет бар ма?"}},
-					{kind: "choice", prompt: "Поехали на вокзал", answer: "Вокзалға барайық", options: []string{"Вокзалға барайық", "Осында тоқтаңыз", "Такси шақырыңызшы"}},
-					{kind: "translate", prompt: "Остановите здесь", answer: "Осында тоқтаңыз"},
-				},
-			},
-			{
-				titleKK: "Билет", titleRU: "Билет",
-				description: "Как спросить время и билет",
-				exercises: []courseExercise{
-					{kind: "choice", prompt: "Сколько времени займёт?", answer: "Қанша уақыт кетеді?", options: []string{"Қанша уақыт кетеді?", "Билет бар ма?", "Осында тоқтаңыз"}},
-					{kind: "choice", prompt: "Есть билет?", answer: "Билет бар ма?", options: []string{"Билет бар ма?", "Такси шақырыңызшы", "Қанша уақыт кетеді?"}},
-					{kind: "translate", prompt: "Вызовите такси, пожалуйста", answer: "Такси шақырыңызшы"},
-				},
-			},
-		},
-	},
-}
-
 // storedSlugs lists the situations already in the database.
 func storedSlugs(ctx context.Context, db *sql.DB) (map[string]bool, error) {
 	rows, err := db.QueryContext(ctx, `SELECT slug FROM situations`)
@@ -352,193 +270,4 @@ func storedSlugs(ctx context.Context, db *sql.DB) (map[string]bool, error) {
 		out[slug] = true
 	}
 	return out, rows.Err()
-}
-
-// Юниты под мотивации work и study. Стартовые три (кафе, магазин, дорога)
-// закрывают только life, поэтому ответ ученика на вопрос «зачем вам казахский»
-// до сих пор не на что было применить.
-var courseWork = courseSituation{
-	slug:        "jumys",
-	titleKK:     "Жұмыста",
-	titleRU:     "На работе",
-	description: "Знакомство с коллегами, встречи и просьбы",
-	level:       "A1",
-	topic:       "work",
-	words: []courseWord{
-		{"Мен бағдарламашымын", "Я программист", "men bağdarlamashymyn"},
-		{"Қай бөлімде жұмыс істейсіз?", "В каком отделе вы работаете?", "qai bölimde jumys isteisiz"},
-		{"Кездесу сағат үште", "Встреча в три часа", "kezdesu sağat üshte"},
-		{"Көмектесе аласыз ба?", "Можете помочь?", "kömektese alasyz ba"},
-		{"Есепті жібердім", "Я отправил отчёт", "esepti jiberdim"},
-	},
-	lessons: []courseLesson{
-		{
-			titleKK: "Танысу", titleRU: "Знакомство",
-			description: "Как представиться и спросить о работе коллеги",
-			exercises: []courseExercise{
-				{kind: "choice", prompt: "Я программист",
-					answer:  "Мен бағдарламашымын",
-					options: []string{"Мен бағдарламашымын", "Кездесу сағат үште", "Рақмет"}},
-				{kind: "choice", prompt: "В каком отделе вы работаете?",
-					answer:  "Қай бөлімде жұмыс істейсіз?",
-					options: []string{"Қай бөлімде жұмыс істейсіз?", "Көмектесе аласыз ба?", "Есепті жібердім"}},
-				{kind: "match", prompt: "Соедините фразу с переводом",
-					pairsLeft: []seedItem{
-						{"l1", "Мен бағдарламашымын"},
-						{"l2", "Қай бөлімде жұмыс істейсіз?"},
-						{"l3", "Көмектесе аласыз ба?"},
-					},
-					pairsRight: []seedItem{
-						{"r1", "Можете помочь?"},
-						{"r2", "Я программист"},
-						{"r3", "В каком отделе вы работаете?"},
-					},
-					pairs: [][2]string{{"l1", "r2"}, {"l2", "r3"}, {"l3", "r1"}}},
-				{kind: "assemble", prompt: "Соберите: «Я программист»",
-					tiles: []seedItem{
-						{"t1", "бағдарламашымын"}, {"t2", "Мен"},
-						{"t3", "жұмыс"}, {"t4", "істеймін"},
-					},
-					order: []string{"t2", "t1"}},
-				{kind: "translate", prompt: "Можете помочь?", answer: "Көмектесе аласыз ба?"},
-			},
-		},
-		{
-			titleKK: "Кездесу", titleRU: "Встреча",
-			description: "Как договориться о времени",
-			exercises: []courseExercise{
-				{kind: "choice", prompt: "Встреча в три часа",
-					answer:  "Кездесу сағат үште",
-					options: []string{"Кездесу сағат үште", "Есепті жібердім", "Мен бағдарламашымын"}},
-				{kind: "assemble", prompt: "Соберите: «Встреча в три часа»",
-					tiles: []seedItem{
-						{"t1", "сағат"}, {"t2", "Кездесу"},
-						{"t3", "үште"}, {"t4", "ертең"},
-					},
-					order: []string{"t2", "t1", "t3"}},
-				{kind: "match", prompt: "Соедините фразу с переводом",
-					pairsLeft: []seedItem{
-						{"l1", "Кездесу сағат үште"},
-						{"l2", "Есепті жібердім"},
-					},
-					pairsRight: []seedItem{
-						{"r1", "Я отправил отчёт"},
-						{"r2", "Встреча в три часа"},
-					},
-					pairs: [][2]string{{"l1", "r2"}, {"l2", "r1"}}},
-				{kind: "translate", prompt: "Встреча в три часа", answer: "Кездесу сағат үште"},
-			},
-		},
-		{
-			titleKK: "Есеп беру", titleRU: "Отчёт",
-			description: "Как сказать, что работа сделана",
-			exercises: []courseExercise{
-				{kind: "choice", prompt: "Я отправил отчёт",
-					answer:  "Есепті жібердім",
-					options: []string{"Есепті жібердім", "Көмектесе аласыз ба?", "Кездесу сағат үште"}},
-				{kind: "assemble", prompt: "Соберите: «Я отправил отчёт»",
-					tiles: []seedItem{
-						{"t1", "жібердім"}, {"t2", "Есепті"}, {"t3", "алдым"},
-					},
-					order: []string{"t2", "t1"}},
-				{kind: "translate", prompt: "Я отправил отчёт", answer: "Есепті жібердім"},
-				{kind: "choice", prompt: "Можете помочь?",
-					answer:  "Көмектесе аласыз ба?",
-					options: []string{"Көмектесе аласыз ба?", "Есепті жібердім", "Қай бөлімде жұмыс істейсіз?"}},
-			},
-		},
-	},
-}
-
-var courseStudy = courseSituation{
-	slug:        "oqu",
-	titleKK:     "Оқуда",
-	titleRU:     "На учёбе",
-	description: "Занятия, библиотека и просьба повторить",
-	level:       "A1",
-	topic:       "study",
-	words: []courseWord{
-		{"Сабақ қашан басталады?", "Когда начинается занятие?", "sabaq qashan bastalady"},
-		{"Дәрісхана қай жерде?", "Где аудитория?", "därishana qai jerde"},
-		{"Кітап алғым келеді", "Хочу взять книгу", "kitap alğym keledi"},
-		{"Түсінбедім, қайталаңызшы", "Не понял, повторите пожалуйста", "tüsinbedim, qaitalañyzshy"},
-		{"Емтихан қиын болды", "Экзамен был трудным", "emtihan qiyn boldy"},
-	},
-	lessons: []courseLesson{
-		{
-			titleKK: "Сабақта", titleRU: "На занятии",
-			description: "Как спросить про время и аудиторию",
-			exercises: []courseExercise{
-				{kind: "choice", prompt: "Когда начинается занятие?",
-					answer:  "Сабақ қашан басталады?",
-					options: []string{"Сабақ қашан басталады?", "Дәрісхана қай жерде?", "Кітап алғым келеді"}},
-				{kind: "choice", prompt: "Где аудитория?",
-					answer:  "Дәрісхана қай жерде?",
-					options: []string{"Дәрісхана қай жерде?", "Емтихан қиын болды", "Сабақ қашан басталады?"}},
-				{kind: "match", prompt: "Соедините фразу с переводом",
-					pairsLeft: []seedItem{
-						{"l1", "Сабақ қашан басталады?"},
-						{"l2", "Дәрісхана қай жерде?"},
-						{"l3", "Түсінбедім, қайталаңызшы"},
-					},
-					pairsRight: []seedItem{
-						{"r1", "Где аудитория?"},
-						{"r2", "Не понял, повторите пожалуйста"},
-						{"r3", "Когда начинается занятие?"},
-					},
-					pairs: [][2]string{{"l1", "r3"}, {"l2", "r1"}, {"l3", "r2"}}},
-				{kind: "assemble", prompt: "Соберите: «Где аудитория?»",
-					tiles: []seedItem{
-						{"t1", "қай"}, {"t2", "Дәрісхана"},
-						{"t3", "жерде"}, {"t4", "қашан"},
-					},
-					order: []string{"t2", "t1", "t3"}},
-				{kind: "translate", prompt: "Когда начинается занятие?", answer: "Сабақ қашан басталады?"},
-			},
-		},
-		{
-			titleKK: "Кітапханада", titleRU: "В библиотеке",
-			description: "Как попросить книгу",
-			exercises: []courseExercise{
-				{kind: "choice", prompt: "Хочу взять книгу",
-					answer:  "Кітап алғым келеді",
-					options: []string{"Кітап алғым келеді", "Емтихан қиын болды", "Дәрісхана қай жерде?"}},
-				{kind: "assemble", prompt: "Соберите: «Хочу взять книгу»",
-					tiles: []seedItem{
-						{"t1", "алғым"}, {"t2", "Кітап"},
-						{"t3", "келеді"}, {"t4", "оқыдым"},
-					},
-					order: []string{"t2", "t1", "t3"}},
-				{kind: "match", prompt: "Соедините фразу с переводом",
-					pairsLeft: []seedItem{
-						{"l1", "Кітап алғым келеді"},
-						{"l2", "Емтихан қиын болды"},
-					},
-					pairsRight: []seedItem{
-						{"r1", "Экзамен был трудным"},
-						{"r2", "Хочу взять книгу"},
-					},
-					pairs: [][2]string{{"l1", "r2"}, {"l2", "r1"}}},
-				{kind: "translate", prompt: "Хочу взять книгу", answer: "Кітап алғым келеді"},
-			},
-		},
-		{
-			titleKK: "Емтихан", titleRU: "Экзамен",
-			description: "Как сказать, что было трудно, и попросить повторить",
-			exercises: []courseExercise{
-				{kind: "choice", prompt: "Экзамен был трудным",
-					answer:  "Емтихан қиын болды",
-					options: []string{"Емтихан қиын болды", "Кітап алғым келеді", "Сабақ қашан басталады?"}},
-				{kind: "assemble", prompt: "Соберите: «Не понял, повторите пожалуйста»",
-					tiles: []seedItem{
-						{"t1", "қайталаңызшы"}, {"t2", "Түсінбедім"}, {"t3", "білемін"},
-					},
-					order: []string{"t2", "t1"}},
-				{kind: "translate", prompt: "Экзамен был трудным", answer: "Емтихан қиын болды"},
-				{kind: "choice", prompt: "Не понял, повторите пожалуйста",
-					answer:  "Түсінбедім, қайталаңызшы",
-					options: []string{"Түсінбедім, қайталаңызшы", "Емтихан қиын болды", "Кітап алғым келеді"}},
-			},
-		},
-	},
 }
