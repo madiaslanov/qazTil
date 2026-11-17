@@ -138,10 +138,14 @@ type ExerciseItemResponse struct {
 type ExerciseResponse struct {
 	ID       int64  `json:"id" example:"1"`
 	LessonID int64  `json:"lesson_id" example:"1"`
-	Kind     string `json:"kind" example:"choice" enums:"choice,translate,match,assemble"`
+	Kind     string `json:"kind" example:"choice" enums:"choice,translate,match,assemble,dialogue"`
 	Position int    `json:"position" example:"1"`
 	Prompt   string `json:"prompt,omitempty" example:"Спасибо"`
-	// Options belong to a choice exercise.
+	// Speaker and Hint belong to a dialogue: the prompt is the other speaker's
+	// line, the hint is its Russian meaning.
+	Speaker string `json:"speaker,omitempty" example:"Даяшы"`
+	Hint    string `json:"hint,omitempty" example:"Здравствуйте, что желаете?"`
+	// Options belong to a choice or dialogue exercise.
 	Options []ExerciseItemResponse `json:"options,omitempty"`
 	// PairsLeft and PairsRight belong to a match exercise.
 	PairsLeft  []ExerciseItemResponse `json:"pairs_left,omitempty"`
@@ -170,7 +174,7 @@ type LessonDetailResponse struct {
 // calls for. Only the fields of that kind are read.
 type ExerciseAnswerRequest struct {
 	// Kind is optional: it only documents what the client meant to send.
-	Kind string `json:"kind,omitempty" example:"choice" enums:"choice,translate,match,assemble"`
+	Kind string `json:"kind,omitempty" example:"choice" enums:"choice,translate,match,assemble,dialogue"`
 	// Answer is the typed line of a translate exercise.
 	Answer string `json:"answer,omitempty" example:"Рақмет"`
 	// OptionID is the picked option of a choice exercise.

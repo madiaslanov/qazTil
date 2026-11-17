@@ -11,6 +11,9 @@ const (
 	ExerciseMatch = "match"
 	// ExerciseAssemble asks the learner to build a line out of word tiles.
 	ExerciseAssemble = "assemble"
+	// ExerciseDialogue puts the learner into a scene: the other speaker says a
+	// line and the learner picks the reply that fits. It is checked like a choice.
+	ExerciseDialogue = "dialogue"
 )
 
 // Unit is a course block built around one situation.

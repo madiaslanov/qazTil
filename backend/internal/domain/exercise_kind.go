@@ -20,6 +20,10 @@ type ExercisePayload struct {
 	PairsLeft  []ExerciseItem `json:"pairs_left,omitempty"`
 	PairsRight []ExerciseItem `json:"pairs_right,omitempty"`
 	Tiles      []ExerciseItem `json:"tiles,omitempty"`
+	// Speaker and Hint belong to a dialogue: who is talking, and the Russian
+	// meaning of their line so the learner can follow the scene.
+	Speaker string `json:"speaker,omitempty"`
+	Hint    string `json:"hint,omitempty"`
 }
 
 // ExerciseAnswer is a learner's answer in the shape its kind calls for.
@@ -35,7 +39,7 @@ type ExerciseAnswer struct {
 // KnownExerciseKind reports whether the kind is one the course can store.
 func KnownExerciseKind(kind string) bool {
 	switch kind {
-	case ExerciseChoice, ExerciseTranslate, ExerciseMatch, ExerciseAssemble:
+	case ExerciseChoice, ExerciseTranslate, ExerciseMatch, ExerciseAssemble, ExerciseDialogue:
 		return true
 	}
 	return false
@@ -49,7 +53,7 @@ func KnownExerciseKind(kind string) bool {
 // the payload the client receives simply has no room for it.
 func CheckAnswer(exercise Exercise, answer ExerciseAnswer) (bool, string, error) {
 	switch exercise.Kind {
-	case ExerciseChoice:
+	case ExerciseChoice, ExerciseDialogue:
 		return checkChoice(exercise, answer)
 	case ExerciseTranslate:
 		got, want := normalizeLine(answer.Text), normalizeLine(exercise.Answer)

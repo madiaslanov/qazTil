@@ -163,3 +163,23 @@ func TestKnownExerciseKind(t *testing.T) {
 		t.Fatal("doodle не должен быть известен")
 	}
 }
+
+func TestDialogueIsCheckedLikeChoice(t *testing.T) {
+	exercise := choiceExercise()
+	exercise.Kind = domain.ExerciseDialogue
+	exercise.Payload = []byte(`{"speaker":"Даяшы","hint":"Что желаете?","options":[
+		{"id":"o1","text":"Бір шай, өтінемін"},{"id":"o2","text":"Рақмет"}
+	]}`)
+
+	correct, expected, err := domain.CheckAnswer(exercise, domain.ExerciseAnswer{OptionID: "o1"})
+	if err != nil || !correct || expected != "Бір шай, өтінемін" {
+		t.Fatalf("верный ответ: correct=%v expected=%q err=%v", correct, expected, err)
+	}
+	correct, expected, err = domain.CheckAnswer(exercise, domain.ExerciseAnswer{OptionID: "o2"})
+	if err != nil || correct || expected != "Бір шай, өтінемін" {
+		t.Fatalf("неверный ответ: correct=%v expected=%q err=%v", correct, expected, err)
+	}
+	if !domain.KnownExerciseKind(domain.ExerciseDialogue) {
+		t.Fatal("dialogue должен быть известным типом")
+	}
+}
