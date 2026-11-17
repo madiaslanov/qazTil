@@ -2,15 +2,8 @@
 
 import { Clock3, HeartCrack } from "lucide-react";
 
-import { useLives } from "@/entities/learner";
+import { formatCountdown, useLives } from "@/entities/learner";
 import { Button, Modal } from "@/shared/ui";
-
-function formatCountdown(ms: number) {
-  const totalSeconds = Math.ceil(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
 
 /** «Жизни закончились»: таймер до новой жизни и выход на путь. */
 export function NoLivesDialog({

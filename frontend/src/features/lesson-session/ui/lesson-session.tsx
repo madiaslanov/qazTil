@@ -15,6 +15,7 @@ import {
 import { AnswerFeedback } from "./answer-feedback";
 import { AnswerTile } from "./answer-tile";
 import { LessonHeader } from "./lesson-header";
+import { LivesOut } from "./lives-out";
 import { MatchBoard } from "./match-board";
 import { PhraseBuilder } from "./phrase-builder";
 
@@ -52,9 +53,12 @@ type Draft = {
 export function LessonSession({
   lesson,
   onFinished,
+  onResume,
 }: {
   lesson: Lesson;
   onFinished: (summary: LessonSummary) => void;
+  /** Жизнь вернулась, ученик жмёт «Продолжить»: страница откроет урок заново. */
+  onResume: () => void;
 }) {
   const session = useLessonSession(lesson);
   const { status, summary } = session;
@@ -85,16 +89,7 @@ export function LessonSession({
   }, [onFinished, summary, status]);
 
   if (status === "failed") {
-    return (
-      <StateNote
-        text="Жизни закончились. Урок остановлен — вернись, когда жизнь восстановится."
-        action={
-          <Button asChild size="md" variant="secondary" className="w-auto">
-            <Link href="/learn">Вернуться к пути</Link>
-          </Button>
-        }
-      />
-    );
+    return <LivesOut onResume={onResume} />;
   }
 
   const { step } = session;

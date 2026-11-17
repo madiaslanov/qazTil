@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { lessonQueries } from "@/entities/lesson";
-import { LessonSession, type LessonSummary } from "@/features/lesson-session";
+import {
+  LessonSession,
+  LivesOut,
+  type LessonSummary,
+} from "@/features/lesson-session";
 import { ApiError } from "@/shared/api";
 import { Button, Screen, StateNote } from "@/shared/ui";
 
@@ -29,10 +33,17 @@ function BackToPath({ text }: { text: string }) {
 export function LessonPage({ lessonId }: { lessonId: number }) {
   const lesson = useQuery(lessonQueries.detail(lessonId));
   const [finished, setFinished] = useState<LessonSummary | null>(null);
+  // Растёт при «Продолжить»: сессия собирается заново с новой точки продолжения.
+  const [run, setRun] = useState(0);
   const onFinished = useCallback(
     (summary: LessonSummary) => setFinished(summary),
     [],
   );
+
+  const resume = useCallback(async () => {
+    await lesson.refetch();
+    setRun((value) => value + 1);
+  }, [lesson]);
 
   if (lesson.isPending) return <Screen />;
 
@@ -45,10 +56,13 @@ export function LessonPage({ lessonId }: { lessonId: number }) {
     return <BackToPath text={lesson.error.message} />;
   }
 
-  // Без жизней урок не начинаем. Если жизни есть, но их 0 по данным урока —
-  // сервер всё равно ответит 409 на первый ответ, но не пускаем зря.
+  // Без жизней урок не начинаем: сервер всё равно ответит 409.
   if (lesson.data.lives === 0) {
-    return <BackToPath text="Жизни закончились. Вернись, когда жизнь восстановится." />;
+    return (
+      <Screen>
+        <LivesOut onResume={resume} />
+      </Screen>
+    );
   }
 
   if (finished) {
@@ -57,7 +71,12 @@ export function LessonPage({ lessonId }: { lessonId: number }) {
 
   return (
     <Screen className="h-dvh bg-surface-muted">
-      <LessonSession lesson={lesson.data} onFinished={onFinished} />
+      <LessonSession
+        key={run}
+        lesson={lesson.data}
+        onFinished={onFinished}
+        onResume={resume}
+      />
     </Screen>
   );
 }

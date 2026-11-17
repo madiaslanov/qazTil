@@ -11,6 +11,7 @@ export {
   levelTitle,
   type CourseLevel,
 } from "./model/levels";
+export { formatCountdown } from "./model/format";
 export { useLearnerStore } from "./model/store";
 export { useLives } from "./model/use-lives";
 export {
