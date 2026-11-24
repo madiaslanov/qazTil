@@ -6,8 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSessionStore } from "@/entities/session";
 
 /**
- * Выход: забываем токен и кэш пользователя. Локальный прогресс остаётся,
- * чтобы тот же ученик после входа продолжил с того же места.
+ * Выход: забываем токен и весь кэш запросов. Путь, прогресс и уроки
+ * у каждого ученика свои, и следующий аккаунт не должен увидеть чужие.
+ * Локальные категории остаются: при входе другим email они пересоздаются.
  */
 export function useSignOut() {
   const router = useRouter();
@@ -16,8 +17,7 @@ export function useSignOut() {
 
   return () => {
     clear();
-    queryClient.removeQueries({ queryKey: ["session"] });
-    queryClient.removeQueries({ queryKey: ["me"] });
+    queryClient.clear();
     router.replace("/");
   };
 }

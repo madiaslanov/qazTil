@@ -37,8 +37,8 @@ configureAuth({
   getToken: getSessionToken,
   onUnauthorized: () => {
     useSessionStore.getState().clear();
-    getQueryClient().removeQueries({ queryKey: ["session"] });
-    getQueryClient().removeQueries({ queryKey: ["me"] });
+    // Данные истёкшей сессии не должны достаться следующему входу.
+    getQueryClient().clear();
   },
 });
 

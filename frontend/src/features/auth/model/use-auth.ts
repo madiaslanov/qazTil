@@ -3,11 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import {
-  profileQueries,
-  useLearnerStore,
-  type LearnerPrefs,
-} from "@/entities/learner";
+import { useLearnerStore, type LearnerPrefs } from "@/entities/learner";
 import {
   sessionApi,
   useSessionStore,
@@ -39,6 +35,8 @@ export function useAuth() {
           })
         : sessionApi.login(request.credentials),
     onSuccess: (session, request) => {
+      // Кэш мог остаться от прошлого аккаунта (путь, прогресс, уроки).
+      queryClient.clear();
       setSession(session);
       // Локально — только прогресс по категориям; prefs уже в Go.
       if (
@@ -47,9 +45,6 @@ export function useAuth() {
       ) {
         createLearner(session.user.email);
       }
-      void queryClient.invalidateQueries({
-        queryKey: profileQueries.current().queryKey,
-      });
       router.push("/learn");
     },
   });
