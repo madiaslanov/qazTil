@@ -1,9 +1,8 @@
 "use client";
 
-import { Check, Volume2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
-import { canSpeak, speak } from "@/shared/lib/speech";
 import { capitalize } from "@/shared/lib/text";
 import { Button } from "@/shared/ui";
 
@@ -25,7 +24,6 @@ export function AnswerFeedback({
   correct,
   answer,
   isLast,
-  speakable = true,
   canRetry = true,
   onNext,
   onRetry,
@@ -34,8 +32,6 @@ export function AnswerFeedback({
   /** Правильный вариант ответа. */
   answer: string;
   isLast: boolean;
-  /** Озвучивать ли ответ: для списка пар это не нужно. */
-  speakable?: boolean;
   /** Повтор недоступен, когда на этом ответе кончились жизни. */
   canRetry?: boolean;
   onNext: () => void;
@@ -79,7 +75,7 @@ export function AnswerFeedback({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-control bg-surface/65 px-3.75 py-3.25">
+      <div className="flex items-center gap-3 rounded-control bg-surface/65 px-3.75 py-3.25">
         <div className="flex flex-col gap-0.75">
           <p
             className={cn(
@@ -93,16 +89,6 @@ export function AnswerFeedback({
             {capitalize(answer)}
           </p>
         </div>
-        {speakable && canSpeak() && (
-          <button
-            type="button"
-            onClick={() => speak(answer)}
-            aria-label="Послушать"
-            className="text-primary"
-          >
-            <Volume2 className="size-5.25" />
-          </button>
-        )}
       </div>
 
       {correct ? (

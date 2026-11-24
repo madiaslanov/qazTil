@@ -260,7 +260,6 @@ export function LessonSession({
           correct={session.result.correct}
           answer={session.result.expected}
           isLast={session.isLast && !failedNow}
-          speakable={step.kind !== "match"}
           canRetry={!failedNow}
           onNext={session.next}
           onRetry={session.retry}
